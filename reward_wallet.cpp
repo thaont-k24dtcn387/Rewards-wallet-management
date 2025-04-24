@@ -39,6 +39,97 @@ public:
     }
 };
 
+class UserAccount
+{
+private:
+    int id; // ID duy nhất của tài khoản
+    std::string name; // Tên người dùng
+    std::string phone; // Số điện thoại
+    std::string email; // Email
+    std::string hashedPassword; // Mật khẩu đã băm
+    double balance; // Số dư ví
+    std::vector<Transaction> transactions; // Lịch sử giao dịch
+
+public:
+    UserAccount(int _id, std::string _name, std::string _phone, std::string _email, std::string _hashedPassword)
+        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword(_hashedPassword), balance(0) {}
+
+    int getId() const { return id; }
+    std::string getName() const { return name; }
+    std::string getPhone() const { return phone; }
+    std::string getEmail() const { return email; }
+    double getBalance() const { return balance; }
+    std::string getHashedPassword() const { return hashedPassword; }
+    std::map<std::string, std::string> getUserMap() 
+    {
+        std::map<std::string, std::string> userMap;
+        userMap[email] = hashedPassword; // Thêm email và hashedPassword vào map
+        return userMap;
+    }
+    void addBalance(double amount) { balance += amount; }
+    void subtractBalance(double amount)
+    {
+        if (balance >= amount)
+            balance -= amount;
+        else
+            throw std::runtime_error("So du khong du!");
+    }
+
+    void addTransaction(const Transaction &transaction) { transactions.push_back(transaction); }
+    std::vector<Transaction> getTransactionHistory() const { return transactions; }
+    void saveUsersToFile(const std::vector<UserAccount> &users, const std::string &filename)
+    {
+        std::ofstream file(filename, std::ios::binary);
+        if (!file.is_open())
+            throw std::runtime_error("Khong the mo file de ghi!");
+    
+        for (const auto &user : users)
+        {
+            file << user.getId() << "|"
+                 << user.getName() << "|"
+                 << user.getPhone() << "|"
+                 << user.getEmail() << "|"
+                 << user.getHashedPassword() << "|"
+                 << user.getBalance() << std::endl;
+        }
+        file.close();
+    }
+    std::vector<UserAccount> loadUsersFromFile(const std::string &filename)
+{
+    std::ifstream file(filename, std::ios::binary);
+    if (!file.is_open())
+        throw std::runtime_error("Khong the mo file de doc!");
+
+    std::vector<UserAccount> users;
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::istringstream iss(line);
+        int id;
+        std::string name, phone, email, hashedPassword;
+        double balance;
+
+        std::getline(iss, name, '|');
+        std::getline(iss, phone, '|');
+        std::getline(iss, email, '|');
+        std::getline(iss, hashedPassword, '|');
+        iss >> balance;
+
+        users.emplace_back(id, name, phone, email, hashedPassword);
+    }
+    file.close();
+    return users;
+}
+    // viet cho toi mot ham get all UserAccount
+    std::vector<UserAccount> getAllUserAccounts() const
+    {
+        // lay tu user_account.dat ra
+
+        std::vector<UserAccount> userAccounts;
+        userAccounts.push_back(*this); // Chỉ có một tài khoản trong ví dụ này
+        return userAccounts;
+    }
+};
 
 // Cau truc khach hang
 class Customer
@@ -335,6 +426,7 @@ int main()
         std::cerr << "Khong the thiet lap locale: " << e.what() << std::endl;
     }
     PointsManager manager;
+    UserAccount userAccount = UserAccount(1, "Nguyen Van A", "0123456789", "abc@gmail.com", "123");
 
     try
     {
@@ -382,6 +474,9 @@ int main()
             try
             {
                 int id = manager.registerCustomer(name, phone, email);
+                std::vector<UserAccount> users; 
+                users.push_back(userAccount);   
+                userAccount.saveUsersToFile(users, "user_account.dat"); 
                 std::cout << "Dang ky thanh cong! ID khach hang: " << id << std::endl;
             }
             catch (const std::exception &e)
@@ -495,7 +590,7 @@ int main()
         }
         case 6:
         {
-            auto customers = manager.getAllCustomers();
+            auto customers = userAccount.loadUsersFromFile("user_account.dat");
             std::cout << "DANH SACH KHACH HANG:\n";
             std::cout << "-----------------------------------------\n";
             std::cout << std::left << std::setw(5) << "ID"
@@ -511,7 +606,7 @@ int main()
                           << std::setw(20) << customer.getName()
                           << std::setw(15) << customer.getPhone()
                           << std::setw(25) << customer.getEmail()
-                          << customer.getPoints() << std::endl;
+                          << customer.getBalance() << std::endl;
             }
             break;
         }
