@@ -1,679 +1,1275 @@
 #include <iostream>
-#include <string>
+#include <fstream>
 #include <vector>
 #include <map>
-#include <fstream>
+#include <string>
 #include <ctime>
-#include <iomanip>
-#include <stdexcept>
+#include <functional>
 #include <random>
+#include <chrono>
+#include <iomanip>
+#include <sstream>
+#include <algorithm>
 
-using namespace std;
+// Lớp User: Quản lý thông tin người dùng
+class User
+{
+private:
+    std::string userId;
+    std::string username;
+    std::string passwordHash; // Mật khẩu đã được mã hóa
+    std::string fullName;
+    std::string email;
+    std::string phone;
+    bool isAdmin;
 
-// Cau truc giao dich
+public:
+    User() : isAdmin(false) {}
+
+    User(const std::string &id, const std::string &username, const std::string &passwordHash,
+         const std::string &fullName, const std::string &email, const std::string &phone, bool isAdmin = false)
+        : userId(id), username(username), passwordHash(passwordHash),
+          fullName(fullName), email(email), phone(phone), isAdmin(isAdmin) {}
+
+    // Getters
+    std::string getUserId() const { return userId; }
+    std::string getUsername() const { return username; }
+    std::string getPasswordHash() const { return passwordHash; }
+    std::string getFullName() const { return fullName; }
+    std::string getEmail() const { return email; }
+    std::string getPhone() const { return phone; }
+    bool getIsAdmin() const { return isAdmin; }
+
+    // Setters
+    void setUserId(const std::string &id) { userId = id; }
+    void setUsername(const std::string &uname) { username = uname; }
+    void setPasswordHash(const std::string &pwd) { passwordHash = pwd; }
+    void setFullName(const std::string &name) { fullName = name; }
+    void setEmail(const std::string &mail) { email = mail; }
+    void setPhone(const std::string &ph) { phone = ph; }
+    void setIsAdmin(bool admin) { isAdmin = admin; }
+
+    // Chuyển đổi thành chuỗi để lưu vào file
+    std::string toString() const
+    {
+        return userId + "," + username + "," + passwordHash + "," +
+               fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0");
+    }
+
+    // Tạo đối tượng User từ chuỗi
+    static User fromString(const std::string &str)
+    {
+        User user;
+        size_t pos = 0;
+        std::string token;
+        std::string s = str;
+        int i = 0;
+
+        while ((pos = s.find(",")) != std::string::npos)
+        {
+            token = s.substr(0, pos);
+            s.erase(0, pos + 1);
+
+            switch (i)
+            {
+            case 0:
+                user.setUserId(token);
+                break;
+            case 1:
+                user.setUsername(token);
+                break;
+            case 2:
+                user.setPasswordHash(token);
+                break;
+            case 3:
+                user.setFullName(token);
+                break;
+            case 4:
+                user.setEmail(token);
+                break;
+            case 5:
+                user.setPhone(token);
+                break;
+            }
+            i++;
+        }
+        user.setIsAdmin(s == "1");
+        return user;
+    }
+};
+
+// Lớp Wallet: Quản lý ví điểm thưởng
+class Wallet
+{
+private:
+    std::string walletId;
+    std::string userId;
+    double balance;
+
+public:
+    Wallet() : balance(0.0) {}
+
+    Wallet(const std::string &wid, const std::string &uid, double bal = 0.0)
+        : walletId(wid), userId(uid), balance(bal) {}
+
+    // Getters
+    std::string getWalletId() const { return walletId; }
+    std::string getUserId() const { return userId; }
+    double getBalance() const { return balance; }
+
+    // Setters
+    void setWalletId(const std::string &id) { walletId = id; }
+    void setUserId(const std::string &id) { userId = id; }
+    void setBalance(double bal) { balance = bal; }
+
+    // Thêm điểm vào ví
+    bool addPoints(double points)
+    {
+        balance += points;
+        return true;
+    }
+
+    // Trừ điểm từ ví
+    bool subtractPoints(double points)
+    {
+        if (balance >= points)
+        {
+            balance -= points;
+            return true;
+        }
+        return false;
+    }
+
+    // Chuyển đổi thành chuỗi để lưu vào file
+    std::string toString() const
+    {
+        return walletId + "," + userId + "," + std::to_string(balance);
+    }
+
+    // Tạo đối tượng Wallet từ chuỗi
+    static Wallet fromString(const std::string &str)
+    {
+        Wallet wallet;
+        size_t pos = 0;
+        std::string token;
+        std::string s = str;
+        int i = 0;
+
+        while ((pos = s.find(",")) != std::string::npos)
+        {
+            token = s.substr(0, pos);
+            s.erase(0, pos + 1);
+
+            switch (i)
+            {
+            case 0:
+                wallet.setWalletId(token);
+                break;
+            case 1:
+                wallet.setUserId(token);
+                break;
+            }
+            i++;
+        }
+        wallet.setBalance(std::stod(s));
+        return wallet;
+    }
+};
+
+// Lớp Transaction: Quản lý giao dịch
 class Transaction
 {
 private:
-    int UserAccountId;
-    int pointsChange;
+    std::string transactionId;
+    std::string fromWalletId;
+    std::string toWalletId;
+    double amount;
+    std::string timestamp;
+    std::string status; // "success", "failed", "pending"
     std::string description;
-    time_t timestamp;
 
 public:
-    Transaction(int _UserAccountId, int _pointsChange, std::string _description, time_t _timestamp)
-        : UserAccountId(_UserAccountId), pointsChange(_pointsChange), description(_description), timestamp(_timestamp) {}
+    Transaction() : amount(0.0), status("pending") {}
 
-    int getUserAccountId() const { return UserAccountId; }
-    int getPointsChange() const { return pointsChange; }
+    Transaction(const std::string &tid, const std::string &from, const std::string &to,
+                double amt, const std::string &time, const std::string &stat, const std::string &desc)
+        : transactionId(tid), fromWalletId(from), toWalletId(to),
+          amount(amt), timestamp(time), status(stat), description(desc) {}
+
+    // Getters
+    std::string getTransactionId() const { return transactionId; }
+    std::string getFromWalletId() const { return fromWalletId; }
+    std::string getToWalletId() const { return toWalletId; }
+    double getAmount() const { return amount; }
+    std::string getTimestamp() const { return timestamp; }
+    std::string getStatus() const { return status; }
     std::string getDescription() const { return description; }
-    time_t getTimestamp() const { return timestamp; }
 
-    std::string getFormattedTime() const
+    // Setters
+    void setTransactionId(const std::string &id) { transactionId = id; }
+    void setFromWalletId(const std::string &id) { fromWalletId = id; }
+    void setToWalletId(const std::string &id) { toWalletId = id; }
+    void setAmount(double amt) { amount = amt; }
+    void setTimestamp(const std::string &time) { timestamp = time; }
+    void setStatus(const std::string &stat) { status = stat; }
+    void setDescription(const std::string &desc) { description = desc; }
+
+    // Chuyển đổi thành chuỗi để lưu vào file
+    std::string toString() const
     {
-        struct tm *timeinfo;
-        timeinfo = localtime(&timestamp);
-        char buffer[80];
-        strftime(buffer, 80, "%d-%m-%Y %H:%M:%S", timeinfo);
-        return std::string(buffer);
+        return transactionId + "," + fromWalletId + "," + toWalletId + "," +
+               std::to_string(amount) + "," + timestamp + "," + status + "," + description;
+    }
+
+    // Tạo đối tượng Transaction từ chuỗi
+    static Transaction fromString(const std::string &str)
+    {
+        Transaction transaction;
+        size_t pos = 0;
+        std::string token;
+        std::string s = str;
+        int i = 0;
+
+        while ((pos = s.find(",")) != std::string::npos && i < 6)
+        {
+            token = s.substr(0, pos);
+            s.erase(0, pos + 1);
+
+            switch (i)
+            {
+            case 0:
+                transaction.setTransactionId(token);
+                break;
+            case 1:
+                transaction.setFromWalletId(token);
+                break;
+            case 2:
+                transaction.setToWalletId(token);
+                break;
+            case 3:
+                transaction.setAmount(std::stod(token));
+                break;
+            case 4:
+                transaction.setTimestamp(token);
+                break;
+            case 5:
+                transaction.setStatus(token);
+                break;
+            }
+            i++;
+        }
+        transaction.setDescription(s); // Phần còn lại là description
+        return transaction;
     }
 };
 
-class UserAccount
+// Lớp quản lý dữ liệu
+class DataManager
 {
 private:
-    int id;                                // ID duy nhất của tài khoản
-    std::string name;                      // Tên người dùng
-    std::string phone;                     // Số điện thoại
-    std::string email;                     // Email
-    std::string hashedPassword;            // Mật khẩu đã băm
-    double balance;                        // Số dư ví
-    int points;                            // Điểm thưởng
-    std::vector<Transaction> transactions; // Lịch sử giao dịch
+    std::string usersFile = "users.dat";
+    std::string walletsFile = "wallets.dat";
+    std::string transactionsFile = "transactions.dat";
+    std::string backupDir = "backup/";
 
-public:
-    UserAccount() : id(0), balance(0), points(0) {}
-    UserAccount(int _id, std::string _name, std::string _phone, std::string _email)
-        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword("12345678"), balance(0), points(0) {}
-    UserAccount(int _id, std::string _name, std::string _phone, std::string _email, std::string _hashedPassword)
-        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword(_hashedPassword), balance(0), points(0) {}
+    std::vector<Wallet> wallets;
+    std::vector<Transaction> transactions;
 
-    int getId() const { return id; }
-    std::string getName() const { return name; }
-    std::string getPhone() const { return phone; }
-    std::string getEmail() const { return email; }
-    double getBalance() const { return balance; }
-    int getPoints() const { return points; }
-    std::string getHashedPassword() const { return hashedPassword; }
+   
 
-    void addBalance(double amount) { balance += amount; }
-    void subtractBalance(double amount)
+    // Tạo ID ngẫu nhiên duy nhất
+    std::string generateUniqueId()
     {
-        if (balance >= amount)
-            balance -= amount;
-        else
-            throw std::runtime_error("So du khong du!");
-    }
+        auto now = std::chrono::system_clock::now();
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&now_c), "%Y%m%d%H%M%S");
 
-    void addPoints(int value, std::string description)
-    {
-        points += value;
-        transactions.push_back(Transaction(id, value, description, time(nullptr)));
-        std::vector<UserAccount> users = loadUsersFromFile("user_account.dat");
-        for (auto &user : users)
-        {
-            cout<< "user: " << &user << endl;
-            // if (user.getId() == id)
-            // {
-            //     user.points = points;             // Cập nhật điểm
-            //     user.transactions = transactions; // Cập nhật lịch sử giao dịch
-            //     break;
-            // }
-        }
-        // saveUsersToFile(users, "user_account.dat");
-    }
-
-    void usePoints(int value, std::string description)
-    {
-
-        if (points >= value)
-        {
-            points -= value;
-            transactions.push_back(Transaction(id, -value, description, time(nullptr)));
-        }
-        else
-        {
-            throw std::runtime_error("Khong du diem de thuc hien giao dich!");
-        }
-    }
-
-    void addTransaction(const Transaction &transaction) { transactions.push_back(transaction); }
-    std::vector<Transaction> getTransactionHistory() const { return transactions; }
-    void saveUsersToFile(const std::vector<UserAccount> &users, const std::string &filename)
-    {
-        std::ofstream file(filename, std::ios::binary);
-        if (!file.is_open())
-            throw std::runtime_error("Khong the mo file de ghi!");
-
-        for (const auto &user : users)
-        {
-            file << user.getId() << "|"
-                 << user.getName() << "|"
-                 << user.getPhone() << "|"
-                 << user.getEmail() << "|"
-                 << user.getHashedPassword() << "|"
-                 << user.getBalance() << std::endl;
-        }
-        file.close();
-    }
-    std::vector<UserAccount> loadUsersFromFile(const std::string &filename)
-    {
-        std::ifstream file(filename, std::ios::binary);
-        if (!file.is_open())
-            throw std::runtime_error("Khong the mo file de doc!");
-
-        std::vector<UserAccount> users;
-        std::string line;
-        while (std::getline(file, line))
-        {
-            std::istringstream iss(line);
-            int id, points;
-            std::string name, phone, email, hashedPassword;
-            double balance;
-
-            // Đọc các trường từ dòng
-            iss >> id;
-            iss.ignore(); // Bỏ qua ký tự phân cách '|'
-            std::getline(iss, name, '|');
-            std::getline(iss, phone, '|');
-            std::getline(iss, email, '|');
-            std::getline(iss, hashedPassword, '|');
-            iss >> balance;
-            iss.ignore(); // Bỏ qua ký tự phân cách '|'
-            iss >> points;
-
-            // Thêm UserAccount vào danh sách
-            users.emplace_back(id, name, phone, email, hashedPassword);
-            users.back().addBalance(balance);                   // Gán số dư
-            users.back().addPoints(points, "Khoi tao tu file"); // Gán điểm
-        }
-        file.close();
-        return users;
-    }
-    std::vector<UserAccount> getAllUserAccounts() const
-    {
-        // lay tu user_account.dat ra
-
-        std::vector<UserAccount> userAccounts;
-        userAccounts.push_back(*this);
-        return userAccounts;
-    }
-};
-
-class Reward
-{
-private:
-    int id;
-    std::string name;
-    std::string description;
-    int pointsRequired;
-
-public:
-    Reward() : id(0), pointsRequired(0) {}
-
-    Reward(int _id, std::string _name, std::string _description, int _pointsRequired)
-        : id(_id), name(_name), description(_description), pointsRequired(_pointsRequired) {}
-
-    int getId() const { return id; }
-    std::string getName() const { return name; }
-    std::string getDescription() const { return description; }
-    int getPointsRequired() const { return pointsRequired; }
-};
-
-// Lop quan ly he thong
-class PointsManager
-{
-private:
-    std::vector<UserAccount> userAccounts;
-    std::map<int, Reward> rewards;
-    int nextUserAccountId;
-
-    // Tạo OTP ngẫu nhiên
-    int generateOTP()
-    {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<> dis(100000, 999999);
-        return dis(gen);
+        std::uniform_int_distribution<> dis(1000, 9999);
+
+        return ss.str() + std::to_string(dis(gen));
+    }
+
+    // Lấy thời gian hiện tại dưới dạng chuỗi
+    std::string getCurrentTimestamp()
+    {
+        auto now = std::chrono::system_clock::now();
+        auto now_c = std::chrono::system_clock::to_time_t(now);
+        std::stringstream ss;
+        ss << std::put_time(std::localtime(&now_c), "%Y-%m-%d %H:%M:%S");
+        return ss.str();
     }
 
 public:
-    PointsManager() : nextUserAccountId(1) {}
-
-    // Chuyển điểm giữa các ví
-    void transferPoints(int fromUserAccountId, int toUserAccountId, int points)
+    DataManager()
     {
-        UserAccount *fromUserAccount = findUserAccount(fromUserAccountId);
-        UserAccount *toUserAccount = findUserAccount(toUserAccountId);
+        loadData();
+    }
+    std::vector<User> users;
+    
+    std::string hashPassword(const std::string &password)
+    {
+        std::hash<std::string> hasher;
+        size_t hash = hasher(password);
+        return std::to_string(hash);
+    }
+    // Đọc dữ liệu từ file
+    void loadData()
+    {
+        loadUsers();
+        loadWallets();
+        loadTransactions();
+    }
 
-        if (fromUserAccount == nullptr)
+    // Đọc dữ liệu người dùng từ file
+    void loadUsers()
+    {
+        users.clear();
+        std::ifstream file(usersFile);
+        std::string line;
+
+        if (file.is_open())
         {
-            throw std::runtime_error("Khong tim thay vi nguon!");
+            while (getline(file, line))
+            {
+                if (!line.empty())
+                {
+                    users.push_back(User::fromString(line));
+                }
+            }
+            file.close();
         }
-        if (toUserAccount == nullptr)
+    }
+
+    // Đọc dữ liệu ví từ file
+    void loadWallets()
+    {
+        wallets.clear();
+        std::ifstream file(walletsFile);
+        std::string line;
+
+        if (file.is_open())
         {
-            throw std::runtime_error("Khong tim thay vi dich!");
+            while (getline(file, line))
+            {
+                if (!line.empty())
+                {
+                    wallets.push_back(Wallet::fromString(line));
+                }
+            }
+            file.close();
         }
+    }
+
+    // Đọc dữ liệu giao dịch từ file
+    void loadTransactions()
+    {
+        transactions.clear();
+        std::ifstream file(transactionsFile);
+        std::string line;
+
+        if (file.is_open())
+        {
+            while (getline(file, line))
+            {
+                if (!line.empty())
+                {
+                    transactions.push_back(Transaction::fromString(line));
+                }
+            }
+            file.close();
+        }
+    }
+
+    // Lưu dữ liệu vào file
+    void saveData()
+    {
+        saveUsers();
+        saveWallets();
+        saveTransactions();
+        backupData(); // Sao lưu sau mỗi lần lưu
+    }
+
+    // Lưu dữ liệu người dùng vào file
+    void saveUsers()
+    {
+        std::ofstream file(usersFile);
+        if (file.is_open())
+        {
+            for (const auto &user : users)
+            {
+                file << user.toString() << std::endl;
+            }
+            file.close();
+        }
+    }
+
+    // Lưu dữ liệu ví vào file
+    void saveWallets()
+    {
+        std::ofstream file(walletsFile);
+        if (file.is_open())
+        {
+            for (const auto &wallet : wallets)
+            {
+                file << wallet.toString() << std::endl;
+            }
+            file.close();
+        }
+    }
+
+    // Lưu dữ liệu giao dịch vào file
+    void saveTransactions()
+    {
+        std::ofstream file(transactionsFile);
+        if (file.is_open())
+        {
+            for (const auto &transaction : transactions)
+            {
+                file << transaction.toString() << std::endl;
+            }
+            file.close();
+        }
+    }
+
+    // Sao lưu dữ liệu
+    void backupData()
+    {
+        std::string timestamp = getCurrentTimestamp();
+        std::replace(timestamp.begin(), timestamp.end(), ' ', '_');
+        std::replace(timestamp.begin(), timestamp.end(), ':', '-');
+
+        std::string backupUserFile = backupDir + "users_" + timestamp + ".bak";
+        std::string backupWalletFile = backupDir + "wallets_" + timestamp + ".bak";
+        std::string backupTransactionFile = backupDir + "transactions_" + timestamp + ".bak";
+
+        // Tạo thư mục backup nếu chưa tồn tại
+        system(("mkdir -p " + backupDir).c_str());
+
+        // Sao chép các file dữ liệu vào thư mục backup
+        std::ifstream srcUsers(usersFile, std::ios::binary);
+        std::ofstream dstUsers(backupUserFile, std::ios::binary);
+        dstUsers << srcUsers.rdbuf();
+
+        std::ifstream srcWallets(walletsFile, std::ios::binary);
+        std::ofstream dstWallets(backupWalletFile, std::ios::binary);
+        dstWallets << srcWallets.rdbuf();
+
+        std::ifstream srcTransactions(transactionsFile, std::ios::binary);
+        std::ofstream dstTransactions(backupTransactionFile, std::ios::binary);
+        dstTransactions << srcTransactions.rdbuf();
+    }
+
+    // Khôi phục dữ liệu từ bản sao lưu
+    bool restoreData(const std::string &timestamp)
+    {
+        std::string backupUserFile = backupDir + "users_" + timestamp + ".bak";
+        std::string backupWalletFile = backupDir + "wallets_" + timestamp + ".bak";
+        std::string backupTransactionFile = backupDir + "transactions_" + timestamp + ".bak";
+
+        // Kiểm tra xem các file backup có tồn tại không
+        std::ifstream testUsers(backupUserFile);
+        std::ifstream testWallets(backupWalletFile);
+        std::ifstream testTransactions(backupTransactionFile);
+
+        if (!testUsers || !testWallets || !testTransactions)
+        {
+            return false; // Không tìm thấy file backup
+        }
+
+        // Sao chép từ backup vào file chính
+        std::ifstream srcUsers(backupUserFile, std::ios::binary);
+        std::ofstream dstUsers(usersFile, std::ios::binary);
+        dstUsers << srcUsers.rdbuf();
+
+        std::ifstream srcWallets(backupWalletFile, std::ios::binary);
+        std::ofstream dstWallets(walletsFile, std::ios::binary);
+        dstWallets << srcWallets.rdbuf();
+
+        std::ifstream srcTransactions(backupTransactionFile, std::ios::binary);
+        std::ofstream dstTransactions(transactionsFile, std::ios::binary);
+        dstTransactions << srcTransactions.rdbuf();
+
+        // Tải lại dữ liệu từ file
+        loadData();
+
+        return true;
+    }
+
+    // Tạo và thêm người dùng mới
+    User createUser(const std::string &username, const std::string &password,
+                    const std::string &fullName, const std::string &email,
+                    const std::string &phone, bool isAdmin = false)
+    {
+        // Kiểm tra xem username đã tồn tại chưa
+        for (const auto &user : users)
+        {
+            if (user.getUsername() == username)
+            {
+                throw std::runtime_error("Tên người dùng đã tồn tại.");
+            }
+        }
+
+        std::string userId = generateUniqueId();
+        std::string passwordHash = hashPassword(password);
+
+        User newUser(userId, username, passwordHash, fullName, email, phone, isAdmin);
+        users.push_back(newUser);
+
+        // Tạo ví cho người dùng mới
+        createWallet(userId);
+
+        saveData();
+        return newUser;
+    }
+
+    // Tạo và thêm ví mới
+    Wallet createWallet(const std::string &userId)
+    {
+        std::string walletId = "W" + generateUniqueId();
+        Wallet newWallet(walletId, userId);
+        wallets.push_back(newWallet);
+
+        saveData();
+        return newWallet;
+    }
+
+    // Tạo và thêm giao dịch mới
+    Transaction createTransaction(const std::string &fromWalletId, const std::string &toWalletId,
+                                  double amount, const std::string &description)
+    {
+        std::string transactionId = "T" + generateUniqueId();
+        std::string timestamp = getCurrentTimestamp();
+
+        Transaction newTransaction(transactionId, fromWalletId, toWalletId,
+                                   amount, timestamp, "pending", description);
+        transactions.push_back(newTransaction);
+
+        saveData();
+        return newTransaction;
+    }
+
+    // Thực hiện giao dịch chuyển điểm
+    bool executeTransaction(const std::string &transactionId, const std::string &otp)
+    {
+        // Tìm giao dịch theo ID
+        auto transactionIt = std::find_if(transactions.begin(), transactions.end(),
+                                          [&transactionId](const Transaction &t)
+                                          { return t.getTransactionId() == transactionId; });
+
+        if (transactionIt == transactions.end() || transactionIt->getStatus() != "pending")
+        {
+            return false; // Không tìm thấy giao dịch hoặc giao dịch không ở trạng thái pending
+        }
+
+        // Xác thực OTP (đây là ví dụ đơn giản, trong thực tế cần một hệ thống OTP an toàn hơn)
+        if (otp != "123456")
+        { // OTP mẫu
+            transactionIt->setStatus("failed");
+            saveData();
+            return false;
+        }
+
+        // Tìm ví nguồn
+        auto fromWalletIt = std::find_if(wallets.begin(), wallets.end(),
+                                         [&](const Wallet &w)
+                                         { return w.getWalletId() == transactionIt->getFromWalletId(); });
+
+        // Tìm ví đích
+        auto toWalletIt = std::find_if(wallets.begin(), wallets.end(),
+                                       [&](const Wallet &w)
+                                       { return w.getWalletId() == transactionIt->getToWalletId(); });
+
+        if (fromWalletIt == wallets.end() || toWalletIt == wallets.end())
+        {
+            transactionIt->setStatus("failed");
+            saveData();
+            return false; // Không tìm thấy ví nguồn hoặc ví đích
+        }
+
+        double amount = transactionIt->getAmount();
 
         // Kiểm tra số dư
-        if (fromUserAccount->getPoints() < points)
+        if (fromWalletIt->getBalance() < amount)
         {
-            throw std::runtime_error("So du khong du de thuc hien giao dich!");
-        }
-
-        // Tạo OTP và yêu cầu xác nhận
-        int otp = generateOTP();
-        std::cout << "OTP de xac nhan giao dich: " << otp << std::endl;
-        int userOtp;
-        std::cout << "Nhap OTP: ";
-        std::cin >> userOtp;
-
-        if (userOtp != otp)
-        {
-            throw std::runtime_error("OTP khong hop le!");
+            transactionIt->setStatus("failed");
+            saveData();
+            return false; // Số dư không đủ
         }
 
         // Thực hiện giao dịch (atomic)
         try
         {
-            fromUserAccount->usePoints(points, "Chuyen diem den vi ID: " + std::to_string(toUserAccountId));
-            toUserAccount->addPoints(points, "Nhan diem tu vi ID: " + std::to_string(fromUserAccountId));
-            std::cout << "Giao dich thanh cong!" << std::endl;
+            fromWalletIt->subtractPoints(amount);
+            toWalletIt->addPoints(amount);
+            transactionIt->setStatus("success");
+            saveData();
+            return true;
         }
         catch (const std::exception &e)
         {
-            throw std::runtime_error("Giao dich that bai: " + std::string(e.what()));
+            // Nếu có lỗi, hủy giao dịch
+            transactionIt->setStatus("failed");
+            saveData();
+            return false;
         }
     }
 
-    int registerUserAccount(std::string name, std::string phone, std::string email)
+    // Tạo OTP (giả lập)
+    std::string generateOTP()
     {
-        nextUserAccountId = getIdMaxOfFile("user_account.dat");
-        // Kiem tra trung lap
-        for (const auto &UserAccount : userAccounts)
-        {
-            if (UserAccount.getPhone() == phone || UserAccount.getEmail() == email)
-            {
-                throw std::runtime_error("So dien thoai hoac email da duoc dang ky!");
-            }
-        }
-
-        UserAccount newUserAccount(nextUserAccountId, name, phone, email);
-        userAccounts.push_back(newUserAccount);
-        return nextUserAccountId;
+        // Trong thực tế, OTP sẽ được gửi qua SMS hoặc email
+        // Đây chỉ là ví dụ đơn giản
+        return "123456"; // OTP mẫu
     }
 
-    UserAccount *findUserAccount(int id)
+    // Sinh mật khẩu tự động
+    std::string generateRandomPassword()
     {
-        cout << "ID: " << id << endl;
-        UserAccount newUser;
-        userAccounts = newUser.loadUsersFromFile("user_account.dat");
-        for (auto &UserAccount : userAccounts)
-        {
-            if (UserAccount.getId() == id)
-            {
-                cout << "user: " << &UserAccount << endl;
-                return &UserAccount;
-            }
+        const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(0, chars.size() - 1);
+
+        std::string password;
+        for (int i = 0; i < 10; ++i)
+        { // Mật khẩu 10 ký tự
+            password += chars[dis(gen)];
         }
-        return nullptr;
+        return password;
     }
 
-    UserAccount *findUserAccountByPhone(std::string phone)
+    // Xác thực đăng nhập
+    User *authenticate(const std::string &username, const std::string &password)
     {
-        for (auto &UserAccount : userAccounts)
+        std::string passwordHash = hashPassword(password);
+
+        for (auto &user : users)
         {
-            if (UserAccount.getPhone() == phone)
+            if (user.getUsername() == username && user.getPasswordHash() == passwordHash)
             {
-                return &UserAccount;
+                return &user;
             }
         }
         return nullptr;
     }
 
-    void addPoints(int UserAccountId, int points, std::string description)
+    // Lấy ví của người dùng
+    Wallet *getWalletByUserId(const std::string &userId)
     {
-        UserAccount *UserAccount = findUserAccount(UserAccountId);
-        if (UserAccount != nullptr)
+        for (auto &wallet : wallets)
         {
-            UserAccount->addPoints(points, description);
-        }
-        else
-        {
-            throw std::runtime_error("Khong tim thay khach hang!");
-        }
-    }
-
-    void redeemReward(int UserAccountId, int rewardId)
-    {
-        UserAccount *UserAccount = findUserAccount(UserAccountId);
-        if (UserAccount == nullptr)
-        {
-            throw std::runtime_error("Khong tim thay khach hang!");
-        }
-
-        auto rewardIt = rewards.find(rewardId);
-        if (rewardIt == rewards.end())
-        {
-            throw std::runtime_error("Khong tim thay phan thuong!");
-        }
-
-        Reward reward = rewardIt->second;
-        if (UserAccount->getPoints() < reward.getPointsRequired())
-        {
-            throw std::runtime_error("Khong du diem de doi phan thuong nay!");
-        }
-
-        UserAccount->usePoints(reward.getPointsRequired(), "Doi thuong: " + reward.getName());
-    }
-
-    void addReward(int id, std::string name, std::string description, int pointsRequired)
-    {
-        rewards[id] = Reward(id, name, description, pointsRequired);
-    }
-
-    std::vector<UserAccount> getAllUserAccounts() const
-    {
-        return userAccounts;
-    }
-
-    void saveToFile(std::string filename)
-    {
-        std::ofstream file(filename);
-        if (!file.is_open())
-        {
-            throw std::runtime_error("Khong the mo file de ghi!");
-        }
-
-        // Ghi du lieu khach hang
-        file << userAccounts.size() << std::endl;
-        for (const auto &UserAccount : userAccounts)
-        {
-            file << UserAccount.getId() << "|"
-                 << UserAccount.getName() << "|"
-                 << UserAccount.getPhone() << "|"
-                 << UserAccount.getEmail() << "|"
-                 << UserAccount.getPoints() << std::endl;
-
-            // Ghi giao dich
-            auto transactions = UserAccount.getTransactionHistory();
-            file << transactions.size() << std::endl;
-            for (const auto &trans : transactions)
+            if (wallet.getUserId() == userId)
             {
-                file << trans.getPointsChange() << "|"
-                     << trans.getDescription() << "|"
-                     << trans.getTimestamp() << std::endl;
+                return &wallet;
+            }
+        }
+        return nullptr;
+    }
+
+    // Lấy ví theo ID
+    Wallet *getWalletById(const std::string &walletId)
+    {
+        for (auto &wallet : wallets)
+        {
+            if (wallet.getWalletId() == walletId)
+            {
+                return &wallet;
+            }
+        }
+        return nullptr;
+    }
+
+    // Lấy danh sách giao dịch của ví
+    std::vector<Transaction> getTransactionsByWalletId(const std::string &walletId)
+    {
+        std::vector<Transaction> result;
+
+        for (const auto &transaction : transactions)
+        {
+            if (transaction.getFromWalletId() == walletId || transaction.getToWalletId() == walletId)
+            {
+                result.push_back(transaction);
             }
         }
 
-        // Ghi du lieu phan thuong
-        file << rewards.size() << std::endl;
-        for (const auto &reward : rewards)
-        {
-            file << reward.second.getId() << "|"
-                 << reward.second.getName() << "|"
-                 << reward.second.getDescription() << "|"
-                 << reward.second.getPointsRequired() << std::endl;
-        }
-
-        file.close();
+        return result;
     }
-    int getIdMaxOfFile(std::string filename)
+
+    // Lấy người dùng theo username
+    User *getUserByUsername(const std::string &username)
     {
-        std::ifstream file(filename);
-        if (!file.is_open())
+        for (auto &user : users)
         {
-            throw std::runtime_error("Khong the mo file de doc!");
-        }
-
-        if (filename == "user_account.dat")
-        {
-            int maxId = 0; // Biến lưu ID lớn nhất
-            std::string line;
-
-            while (std::getline(file, line))
+            if (user.getUsername() == username)
             {
-                std::istringstream iss(line);
-                int id;
-                char delimiter;
-
-                // Đọc ID (phần tử đầu tiên trước dấu '|')
-                iss >> id >> delimiter;
-
-                // Cập nhật maxId nếu ID lớn hơn
-                if (id > maxId)
-                {
-                    maxId = id;
-                }
+                return &user;
             }
-
-            file.close();
-
-            // Gán nextUserAccountId bằng maxId + 1
-            nextUserAccountId = maxId + 1;
         }
-        file.close();
-        return nextUserAccountId;
+        return nullptr;
     }
-    void loadFromFile(std::string filename)
-    {
-        std::ifstream file(filename);
-        if (!file.is_open())
-        {
-            throw std::runtime_error("Khong the mo file de doc!");
-        }
 
-        userAccounts.clear();
-        rewards.clear();
-        file.close();
+    // Lấy người dùng theo ID
+    User *getUserById(const std::string &userId)
+    {
+        for (auto &user : users)
+        {
+            if (user.getUserId() == userId)
+            {
+                return &user;
+            }
+        }
+        return nullptr;
     }
 };
 
-// Ham menu chinh
-int main()
+// Lớp quản lý hệ thống
+class System
 {
-    try
-    {
-        std::locale::global(std::locale("")); // Su dung locale mac dinh cua he thong
-    }
-    catch (const std::runtime_error &e)
-    {
-        std::cerr << "Khong the thiet lap locale: " << e.what() << std::endl;
-    }
-    PointsManager manager;
-    UserAccount newUser = UserAccount(1, "Nguyen Van A", "0123456789", "abc@gmail.com", "123");
+private:
+    DataManager dataManager;
+    User *currentUser;
 
-    try
+    // Hiển thị menu cho người dùng
+    void showUserMenu()
     {
-        manager.loadFromFile("points_system.dat");
-    }
-    catch (const std::exception &e)
-    {
-        std::cout << "Khoi tao he thong moi" << std::endl;
-    }
-
-    // Them mot so phan thuong mau
-    manager.addReward(1, "Voucher 10%", "Giam gia 10% cho lan mua hang tiep theo", 100);
-    manager.addReward(2, "Voucher 20%", "Giam gia 20% cho lan mua hang tiep theo", 200);
-    manager.addReward(3, "Mien phi van chuyen", "Mien phi van chuyen cho don hang", 150);
-
-    int choice;
-    do
-    {
-        std::cout << "\n==== HE THONG QUAN LY VI DIEM THUONG ====\n";
-        std::cout << "1. Dang ky khach hang moi\n";
-        std::cout << "2. Tim kiem khach hang\n";
-        std::cout << "3. Cong diem cho khach hang\n";
-        std::cout << "4. Doi phan thuong\n";
-        std::cout << "5. Xem lich su giao dich\n";
-        std::cout << "6. Danh sach khach hang\n";
-        std::cout << "7. Luu du lieu\n";
-        std::cout << "8. Chuyen diem giua cac vi\n";
-        std::cout << "0. Thoat\n";
-        std::cout << "Lua chon cua ban: ";
-        std::cin >> choice;
-
-        switch (choice)
+        while (true)
         {
-        case 1:
-        {
-            std::string name, phone, email;
-            std::cout << "Nhap ten khach hang: ";
-            std::cin.ignore();
-            std::getline(std::cin, name);
-            std::cout << "Nhap so dien thoai: ";
-            std::cin >> phone;
-            std::cout << "Nhap email: ";
-            std::cin >> email;
+            std::cout << "\n===== MENU NGƯỜI DÙNG =====\n";
+            std::cout << "1. Xem thông tin cá nhân\n";
+            std::cout << "2. Xem số dư ví\n";
+            std::cout << "3. Xem lịch sử giao dịch\n";
+            std::cout << "4. Chuyển điểm\n";
+            std::cout << "5. Đổi mật khẩu\n";
+            std::cout << "6. Đăng xuất\n";
+            std::cout << "Lựa chọn của bạn: ";
 
+            int choice;
+            std::cin >> choice;
+
+            switch (choice)
+            {
+            case 1:
+                showUserInfo();
+                break;
+            case 2:
+                showWalletBalance();
+                break;
+            case 3:
+                showTransactionHistory();
+                break;
+            case 4:
+                transferPoints();
+                break;
+            case 5:
+                changePassword();
+                break;
+            case 6:
+                logout();
+                return;
+            default:
+                std::cout << "Lựa chọn không hợp lệ.\n";
+            }
+        }
+    }
+
+    // Hiển thị menu cho admin
+    void showAdminMenu()
+    {
+        while (true)
+        {
+            std::cout << "\n===== MENU QUẢN TRỊ VIÊN =====\n";
+            std::cout << "1. Tạo tài khoản người dùng mới\n";
+            std::cout << "2. Xem danh sách người dùng\n";
+            std::cout << "3. Sao lưu dữ liệu\n";
+            std::cout << "4. Khôi phục dữ liệu\n";
+            std::cout << "5. Đăng xuất\n";
+            std::cout << "Lựa chọn của bạn: ";
+
+            int choice;
+            std::cin >> choice;
+
+            switch (choice)
+            {
+            case 1:
+                createNewUser();
+                break;
+            case 2:
+                showAllUsers();
+                break;
+            case 3:
+                backupData();
+                break;
+            case 4:
+                restoreData();
+                break;
+            case 5:
+                logout();
+                return;
+            default:
+                std::cout << "Lựa chọn không hợp lệ.\n";
+            }
+        }
+    }
+
+    // Hiển thị thông tin người dùng
+    void showUserInfo()
+    {
+        std::cout << "\n===== THÔNG TIN CÁ NHÂN =====\n";
+        std::cout << "ID: " << currentUser->getUserId() << std::endl;
+        std::cout << "Tên đăng nhập: " << currentUser->getUsername() << std::endl;
+        std::cout << "Họ tên: " << currentUser->getFullName() << std::endl;
+        std::cout << "Email: " << currentUser->getEmail() << std::endl;
+        std::cout << "Số điện thoại: " << currentUser->getPhone() << std::endl;
+        std::cout << "Loại tài khoản: " << (currentUser->getIsAdmin() ? "Quản trị viên" : "Người dùng") << std::endl;
+    }
+
+    // Hiển thị số dư ví
+    void showWalletBalance()
+    {
+        Wallet *wallet = dataManager.getWalletByUserId(currentUser->getUserId());
+
+        if (wallet)
+        {
+            std::cout << "\n===== SỐ DƯ VÍ =====\n";
+            std::cout
+                << "ID ví: " << wallet->getWalletId() << std::endl;
+            std::cout << "Số dư: " << wallet->getBalance() << " điểm" << std::endl;
+        }
+        else
+        {
+            std::cout << "Không tìm thấy thông tin ví.\n";
+        }
+    }
+
+    // Hiển thị lịch sử giao dịch
+    void showTransactionHistory()
+    {
+        Wallet *wallet = dataManager.getWalletByUserId(currentUser->getUserId());
+
+        if (!wallet)
+        {
+            std::cout << "Không tìm thấy thông tin ví.\n";
+            return;
+        }
+
+        std::vector<Transaction> transactions = dataManager.getTransactionsByWalletId(wallet->getWalletId());
+
+        std::cout << "\n===== LỊCH SỬ GIAO DỊCH =====\n";
+
+        if (transactions.empty())
+        {
+            std::cout << "Chưa có giao dịch nào.\n";
+            return;
+        }
+
+        std::cout << std::left << std::setw(12) << "ID GD"
+                  << std::setw(12) << "TỪ VÍ"
+                  << std::setw(12) << "ĐẾN VÍ"
+                  << std::setw(10) << "SỐ ĐIỂM"
+                  << std::setw(20) << "THỜI GIAN"
+                  << std::setw(10) << "TRẠNG THÁI"
+                  << "MÔ TẢ\n";
+
+        for (const auto &transaction : transactions)
+        {
+            std::cout << std::left << std::setw(12) << transaction.getTransactionId()
+                      << std::setw(12) << transaction.getFromWalletId()
+                      << std::setw(12) << transaction.getToWalletId()
+                      << std::setw(10) << transaction.getAmount()
+                      << std::setw(20) << transaction.getTimestamp()
+                      << std::setw(10) << transaction.getStatus()
+                      << transaction.getDescription() << std::endl;
+        }
+    }
+
+    // Chuyển điểm từ ví của người dùng hiện tại sang ví khác
+    void transferPoints()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        Wallet *fromWallet = dataManager.getWalletByUserId(currentUser->getUserId());
+
+        if (!fromWallet)
+        {
+            std::cout << "Không tìm thấy thông tin ví.\n";
+            return;
+        }
+
+        std::string toWalletId;
+        double amount;
+        std::string description;
+
+        std::cout << "\n===== CHUYỂN ĐIỂM =====\n";
+        std::cout << "Nhập ID ví nhận: ";
+        std::getline(std::cin, toWalletId);
+
+        // Kiểm tra ví đích
+        Wallet *toWallet = dataManager.getWalletById(toWalletId);
+        if (!toWallet)
+        {
+            std::cout << "Không tìm thấy ví đích.\n";
+            return;
+        }
+
+        // Không cho phép chuyển điểm cho chính mình
+        if (fromWallet->getWalletId() == toWalletId)
+        {
+            std::cout << "Không thể chuyển điểm cho chính mình.\n";
+            return;
+        }
+
+        std::cout << "Nhập số điểm cần chuyển: ";
+        std::cin >> amount;
+
+        // Kiểm tra số điểm cần chuyển
+        if (amount <= 0)
+        {
+            std::cout << "Số điểm phải lớn hơn 0.\n";
+            return;
+        }
+
+        if (fromWallet->getBalance() < amount)
+        {
+            std::cout << "Số dư không đủ.\n";
+            return;
+        }
+
+        std::cin.ignore(); // Xóa bộ đệm
+        std::cout << "Nhập mô tả giao dịch: ";
+        std::getline(std::cin, description);
+
+        // Tạo giao dịch
+        Transaction transaction = dataManager.createTransaction(fromWallet->getWalletId(), toWalletId, amount, description);
+
+        // Sinh OTP
+        std::string otp = dataManager.generateOTP();
+        std::cout << "Mã OTP của bạn là: " << otp << std::endl;
+
+        // Xác nhận OTP
+        std::string inputOTP;
+        std::cout << "Nhập mã OTP để xác nhận giao dịch: ";
+        std::cin >> inputOTP;
+
+        // Thực hiện giao dịch
+        bool success = dataManager.executeTransaction(transaction.getTransactionId(), inputOTP);
+
+        if (success)
+        {
+            std::cout << "Chuyển điểm thành công.\n";
+        }
+        else
+        {
+            std::cout << "Chuyển điểm thất bại. Vui lòng kiểm tra lại OTP hoặc thử lại sau.\n";
+        }
+    }
+
+    // Đổi mật khẩu
+    void changePassword()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        std::string currentPassword, newPassword, confirmPassword;
+
+        std::cout << "\n===== ĐỔI MẬT KHẨU =====\n";
+        std::cout << "Nhập mật khẩu hiện tại: ";
+        std::getline(std::cin, currentPassword);
+
+        // Xác thực mật khẩu hiện tại
+        if (dataManager.hashPassword(currentPassword) != currentUser->getPasswordHash())
+        {
+            std::cout << "Mật khẩu hiện tại không đúng.\n";
+            return;
+        }
+
+        std::cout << "Nhập mật khẩu mới: ";
+        std::getline(std::cin, newPassword);
+
+        std::cout << "Xác nhận mật khẩu mới: ";
+        std::getline(std::cin, confirmPassword);
+
+        if (newPassword != confirmPassword)
+        {
+            std::cout << "Mật khẩu xác nhận không khớp.\n";
+            return;
+        }
+
+        // Cập nhật mật khẩu
+        currentUser->setPasswordHash(dataManager.hashPassword(newPassword));
+        dataManager.saveData();
+
+        std::cout << "Đổi mật khẩu thành công.\n";
+    }
+
+    // Đăng xuất
+    void logout()
+    {
+        currentUser = nullptr;
+        std::cout << "Đã đăng xuất thành công.\n";
+    }
+
+    // Tạo người dùng mới (chỉ dành cho admin)
+    void createNewUser()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        std::string username, password, fullName, email, phone;
+        bool isAdmin;
+
+        std::cout << "\n===== TẠO NGƯỜI DÙNG MỚI =====\n";
+        std::cout << "Nhập tên đăng nhập: ";
+        std::getline(std::cin, username);
+
+        // Kiểm tra xem username đã tồn tại chưa
+        if (dataManager.getUserByUsername(username))
+        {
+            std::cout << "Tên đăng nhập đã tồn tại.\n";
+            return;
+        }
+
+        std::cout << "Tạo mật khẩu tự động? (1-Có, 0-Không): ";
+        int autoGen;
+        std::cin >> autoGen;
+
+        std::cin.ignore(); // Xóa bộ đệm
+
+        if (autoGen == 1)
+        {
+            password = dataManager.generateRandomPassword();
+            std::cout << "Mật khẩu được tạo tự động: " << password << std::endl;
+        }
+        else
+        {
+            std::cout << "Nhập mật khẩu: ";
+            std::getline(std::cin, password);
+        }
+
+        std::cout << "Nhập họ tên: ";
+        std::getline(std::cin, fullName);
+
+        std::cout << "Nhập email: ";
+        std::getline(std::cin, email);
+
+        std::cout << "Nhập số điện thoại: ";
+        std::getline(std::cin, phone);
+
+        std::cout << "Là quản trị viên? (1-Có, 0-Không): ";
+        std::cin >> isAdmin;
+
+        try
+        {
+            User newUser = dataManager.createUser(username, password, fullName, email, phone, isAdmin);
+            std::cout << "Tạo tài khoản thành công.\n";
+            std::cout << "ID người dùng: " << newUser.getUserId() << std::endl;
+        }
+        catch (const std::exception &e)
+        {
+            std::cout << "Lỗi: " << e.what() << std::endl;
+        }
+    }
+
+    // Hiển thị danh sách người dùng (chỉ dành cho admin)
+    void showAllUsers()
+    {
+        std::vector<User> &users = dataManager.users;
+
+        std::cout << "\n===== DANH SÁCH NGƯỜI DÙNG =====\n";
+        std::cout << std::left << std::setw(12) << "ID"
+                  << std::setw(20) << "TÊN ĐĂNG NHẬP"
+                  << std::setw(30) << "HỌ TÊN"
+                  << std::setw(30) << "EMAIL"
+                  << std::setw(15) << "SỐ ĐIỆN THOẠI"
+                  << "LOẠI\n";
+
+        for (const auto &user : users)
+        {
+            std::cout << std::left << std::setw(12) << user.getUserId()
+                      << std::setw(20) << user.getUsername()
+                      << std::setw(30) << user.getFullName()
+                      << std::setw(30) << user.getEmail()
+                      << std::setw(15) << user.getPhone()
+                      << (user.getIsAdmin() ? "Quản trị viên" : "Người dùng") << std::endl;
+        }
+    }
+
+    // Sao lưu dữ liệu
+    void backupData()
+    {
+        dataManager.backupData();
+        std::cout << "Đã sao lưu dữ liệu thành công.\n";
+    }
+
+    // Khôi phục dữ liệu
+    void restoreData()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        std::string timestamp;
+        std::cout << "\n===== KHÔI PHỤC DỮ LIỆU =====\n";
+        std::cout << "Nhập thời gian sao lưu (định dạng YYYY-MM-DD_HH-MM-SS): ";
+        std::getline(std::cin, timestamp);
+
+        bool success = dataManager.restoreData(timestamp);
+
+        if (success)
+        {
+            std::cout << "Khôi phục dữ liệu thành công.\n";
+        }
+        else
+        {
+            std::cout << "Không tìm thấy bản sao lưu tại thời điểm này.\n";
+        }
+    }
+
+public:
+    System() : currentUser(nullptr)
+    {
+        // Kiểm tra xem đã có tài khoản admin mặc định chưa
+        User *admin = dataManager.getUserByUsername("admin");
+        if (!admin)
+        {
             try
             {
-                int id = manager.registerUserAccount(name, phone, email);
-                std::vector<UserAccount> users = newUser.loadUsersFromFile("user_account.dat");
-                newUser = UserAccount(id, name, phone, email);
-                users.push_back(newUser);
-                newUser.saveUsersToFile(users, "user_account.dat");
-                std::cout << "Dang ky thanh cong! ID khach hang: " << id << std::endl;
+                dataManager.createUser("admin", "admin123", "Administrator", "admin@example.com", "0123456789", true);
+                std::cout << "Đã tạo tài khoản quản trị mặc định.\n";
+                std::cout << "Tên đăng nhập: admin\n";
+                std::cout << "Mật khẩu: admin123\n";
             }
             catch (const std::exception &e)
             {
-                std::cout << "Loi: " << e.what() << std::endl;
+                std::cout << "Lỗi khi tạo tài khoản quản trị: " << e.what() << std::endl;
             }
-            break;
         }
-        case 2:
-        {
-            std::string phone;
-            std::cout << "Nhap so dien thoai khach hang: ";
-            std::cin >> phone;
+    }
 
-            UserAccount *UserAccount = manager.findUserAccountByPhone(phone);
-            if (UserAccount != nullptr)
-            {
-                std::cout << "ID: " << UserAccount->getId() << std::endl;
-                std::cout << "Ten: " << UserAccount->getName() << std::endl;
-                std::cout << "Dien thoai: " << UserAccount->getPhone() << std::endl;
-                std::cout << "Email: " << UserAccount->getEmail() << std::endl;
-                std::cout << "Diem hien tai: " << UserAccount->getPoints() << std::endl;
-            }
-            else
-            {
-                std::cout << "Khong tim thay khach hang!" << std::endl;
-            }
-            break;
-        }
-        case 3:
+    // Hiển thị menu chính
+    void showMainMenu()
+    {
+        while (true)
         {
-            int id, points;
-            std::string description;
-            std::cout << "Nhap ID khach hang: ";
-            std::cin >> id;
-            std::cout << "Nhap so diem: ";
-            std::cin >> points;
-            std::cout << "Nhap mo ta: ";
-            std::cin.ignore();
-            std::getline(std::cin, description);
-
-            try
+            if (currentUser)
             {
-                manager.addPoints(id, points, description);
-                std::cout << "Da cong " << points << " diem cho khach hang!" << std::endl;
-            }
-            catch (const std::exception &e)
-            {
-                std::cout << "Loi: " << e.what() << std::endl;
-            }
-            break;
-        }
-        case 4:
-        {
-            int UserAccountId, rewardId;
-            std::cout << "Nhap ID khach hang: ";
-            std::cin >> UserAccountId;
-            std::cout << "Nhap ID phan thuong: ";
-            std::cin >> rewardId;
-
-            try
-            {
-                manager.redeemReward(UserAccountId, rewardId);
-                std::cout << "Doi phan thuong thanh cong!" << std::endl;
-            }
-            catch (const std::exception &e)
-            {
-                std::cout << "Loi: " << e.what() << std::endl;
-            }
-            break;
-        }
-        case 5:
-        {
-            int id;
-            std::cout << "Nhap ID khach hang: ";
-            std::cin >> id;
-
-            UserAccount *UserAccount = manager.findUserAccount(id);
-            if (UserAccount != nullptr)
-            {
-                auto transactions = UserAccount->getTransactionHistory();
-                if (transactions.empty())
+                if (currentUser->getIsAdmin())
                 {
-                    std::cout << "Khach hang chua co giao dich nao!" << std::endl;
+                    showAdminMenu();
                 }
                 else
                 {
-                    std::cout << "LICH SU GIAO DICH:\n";
-                    std::cout << "-----------------------------------------\n";
-                    for (const auto &trans : transactions)
-                    {
-                        std::cout << trans.getFormattedTime() << " | ";
-                        if (trans.getPointsChange() > 0)
-                        {
-                            std::cout << "+" << trans.getPointsChange();
-                        }
-                        else
-                        {
-                            std::cout << trans.getPointsChange();
-                        }
-                        std::cout << " diem | " << trans.getDescription() << std::endl;
-                    }
-                    std::cout << "-----------------------------------------\n";
+                    showUserMenu();
                 }
             }
             else
             {
-                std::cout << "Khong tim thay khach hang!" << std::endl;
-            }
-            break;
-        }
-        case 6:
-        {
-            auto UserAccounts = newUser.loadUsersFromFile("user_account.dat");
-            std::cout << "DANH SACH KHACH HANG:\n";
-            std::cout << "-----------------------------------------\n";
-            std::cout << std::left << std::setw(5) << "ID"
-                      << std::setw(20) << "Ten"
-                      << std::setw(15) << "Dien thoai"
-                      << std::setw(25) << "Email"
-                      << "Diem\n";
-            std::cout << "-----------------------------------------\n";
-            for (const auto &UserAccount : UserAccounts)
-            {
-                std::cout << std::left << std::setw(5) << UserAccount.getId()
-                          << std::setw(20) << UserAccount.getName()
-                          << std::setw(15) << UserAccount.getPhone()
-                          << std::setw(25) << UserAccount.getEmail()
-                          << UserAccount.getBalance() << std::endl;
-            }
-            break;
-        }
-        case 7:
-        {
-            try
-            {
-                manager.saveToFile("points_system.dat");
-                std::cout << "Luu du lieu thanh cong!" << std::endl;
-            }
-            catch (const std::exception &e)
-            {
-                std::cout << "Loi: " << e.what() << std::endl;
-            }
-            break;
-        }
-        case 8:
-        {
-            int fromId, toId, points;
-            std::cout << "Nhap ID vi nguon: ";
-            std::cin >> fromId;
-            std::cout << "Nhap ID vi dich: ";
-            std::cin >> toId;
-            std::cout << "Nhap so diem can chuyen: ";
-            std::cin >> points;
+                std::cout << "\n===== HỆ THỐNG ĐĂNG NHẬP VÀ VÍ ĐIỂM THƯỞNG =====\n";
+                std::cout << "1. Đăng nhập\n";
+                std::cout << "2. Đăng ký\n";
+                std::cout << "3. Thoát\n";
+                std::cout << "Lựa chọn của bạn: ";
 
-            try
-            {
-                manager.transferPoints(fromId, toId, points);
-            }
-            catch (const std::exception &e)
-            {
-                std::cout << "Loi: " << e.what() << std::endl;
-            }
-            break;
-        }
-        case 0:
-            std::cout << "Cam on ban da su dung he thong!" << std::endl;
-            break;
-        default:
-            std::cout << "Lua chon khong hop le!" << std::endl;
-        }
-    } while (choice != 0);
+                int choice;
+                std::cin >> choice;
 
+                switch (choice)
+                {
+                case 1:
+                    login();
+                    break;
+                case 2:
+                    registerUser();
+                    break;
+                case 3:
+                    std::cout << "Cảm ơn bạn đã sử dụng hệ thống. Tạm biệt!\n";
+                    return;
+                default:
+                    std::cout << "Lựa chọn không hợp lệ.\n";
+                }
+            }
+        }
+    }
+
+    // Đăng nhập
+    void login()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        std::string username, password;
+
+        std::cout << "\n===== ĐĂNG NHẬP =====\n";
+        std::cout << "Tên đăng nhập: ";
+        std::getline(std::cin, username);
+
+        std::cout << "Mật khẩu: ";
+        std::getline(std::cin, password);
+
+        currentUser = dataManager.authenticate(username, password);
+
+        if (currentUser)
+        {
+            std::cout << "Đăng nhập thành công. Xin chào, " << currentUser->getFullName() << "!\n";
+        }
+        else
+        {
+            std::cout << "Đăng nhập thất bại. Tên đăng nhập hoặc mật khẩu không đúng.\n";
+        }
+    }
+
+    // Đăng ký người dùng mới
+    void registerUser()
+    {
+        std::cin.ignore(); // Xóa bộ đệm
+
+        std::string username, password, confirmPassword, fullName, email, phone;
+
+        std::cout << "\n===== ĐĂNG KÝ =====\n";
+        std::cout << "Nhập tên đăng nhập: ";
+        std::getline(std::cin, username);
+
+        // Kiểm tra xem username đã tồn tại chưa
+        if (dataManager.getUserByUsername(username))
+        {
+            std::cout << "Tên đăng nhập đã tồn tại.\n";
+            return;
+        }
+
+        std::cout << "Nhập mật khẩu: ";
+        std::getline(std::cin, password);
+
+        std::cout << "Xác nhận mật khẩu: ";
+        std::getline(std::cin, confirmPassword);
+
+        if (password != confirmPassword)
+        {
+            std::cout << "Mật khẩu xác nhận không khớp.\n";
+            return;
+        }
+
+        std::cout << "Nhập họ tên: ";
+        std::getline(std::cin, fullName);
+
+        std::cout << "Nhập email: ";
+        std::getline(std::cin, email);
+
+        std::cout << "Nhập số điện thoại: ";
+        std::getline(std::cin, phone);
+
+        try
+        {
+            User newUser = dataManager.createUser(username, password, fullName, email, phone);
+            std::cout << "Đăng ký thành công.\n";
+            currentUser = dataManager.getUserByUsername(username);
+        }
+        catch (const std::exception &e)
+        {
+            std::cout << "Lỗi: " << e.what() << std::endl;
+        }
+    }
+};
+
+int main()
+{
+    System system;
+    system.showMainMenu();
     return 0;
 }
