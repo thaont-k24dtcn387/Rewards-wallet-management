@@ -10,21 +10,20 @@
 
 using namespace std;
 
-
 // Cau truc giao dich
 class Transaction
 {
 private:
-    int customerId;
+    int UserAccountId;
     int pointsChange;
     std::string description;
     time_t timestamp;
 
 public:
-    Transaction(int _customerId, int _pointsChange, std::string _description, time_t _timestamp)
-        : customerId(_customerId), pointsChange(_pointsChange), description(_description), timestamp(_timestamp) {}
+    Transaction(int _UserAccountId, int _pointsChange, std::string _description, time_t _timestamp)
+        : UserAccountId(_UserAccountId), pointsChange(_pointsChange), description(_description), timestamp(_timestamp) {}
 
-    int getCustomerId() const { return customerId; }
+    int getUserAccountId() const { return UserAccountId; }
     int getPointsChange() const { return pointsChange; }
     std::string getDescription() const { return description; }
     time_t getTimestamp() const { return timestamp; }
@@ -42,30 +41,30 @@ public:
 class UserAccount
 {
 private:
-    int id; // ID duy nhất của tài khoản
-    std::string name; // Tên người dùng
-    std::string phone; // Số điện thoại
-    std::string email; // Email
-    std::string hashedPassword; // Mật khẩu đã băm
-    double balance; // Số dư ví
+    int id;                                // ID duy nhất của tài khoản
+    std::string name;                      // Tên người dùng
+    std::string phone;                     // Số điện thoại
+    std::string email;                     // Email
+    std::string hashedPassword;            // Mật khẩu đã băm
+    double balance;                        // Số dư ví
+    int points;                            // Điểm thưởng
     std::vector<Transaction> transactions; // Lịch sử giao dịch
 
 public:
+    UserAccount() : id(0), balance(0), points(0) {}
+    UserAccount(int _id, std::string _name, std::string _phone, std::string _email)
+        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword("12345678"), balance(0), points(0) {}
     UserAccount(int _id, std::string _name, std::string _phone, std::string _email, std::string _hashedPassword)
-        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword(_hashedPassword), balance(0) {}
+        : id(_id), name(_name), phone(_phone), email(_email), hashedPassword(_hashedPassword), balance(0), points(0) {}
 
     int getId() const { return id; }
     std::string getName() const { return name; }
     std::string getPhone() const { return phone; }
     std::string getEmail() const { return email; }
     double getBalance() const { return balance; }
+    int getPoints() const { return points; }
     std::string getHashedPassword() const { return hashedPassword; }
-    std::map<std::string, std::string> getUserMap() 
-    {
-        std::map<std::string, std::string> userMap;
-        userMap[email] = hashedPassword; // Thêm email và hashedPassword vào map
-        return userMap;
-    }
+
     void addBalance(double amount) { balance += amount; }
     void subtractBalance(double amount)
     {
@@ -75,6 +74,38 @@ public:
             throw std::runtime_error("So du khong du!");
     }
 
+    void addPoints(int value, std::string description)
+    {
+        points += value;
+        transactions.push_back(Transaction(id, value, description, time(nullptr)));
+        std::vector<UserAccount> users = loadUsersFromFile("user_account.dat");
+        for (auto &user : users)
+        {
+            cout<< "user: " << &user << endl;
+            // if (user.getId() == id)
+            // {
+            //     user.points = points;             // Cập nhật điểm
+            //     user.transactions = transactions; // Cập nhật lịch sử giao dịch
+            //     break;
+            // }
+        }
+        // saveUsersToFile(users, "user_account.dat");
+    }
+
+    void usePoints(int value, std::string description)
+    {
+
+        if (points >= value)
+        {
+            points -= value;
+            transactions.push_back(Transaction(id, -value, description, time(nullptr)));
+        }
+        else
+        {
+            throw std::runtime_error("Khong du diem de thuc hien giao dich!");
+        }
+    }
+
     void addTransaction(const Transaction &transaction) { transactions.push_back(transaction); }
     std::vector<Transaction> getTransactionHistory() const { return transactions; }
     void saveUsersToFile(const std::vector<UserAccount> &users, const std::string &filename)
@@ -82,7 +113,7 @@ public:
         std::ofstream file(filename, std::ios::binary);
         if (!file.is_open())
             throw std::runtime_error("Khong the mo file de ghi!");
-    
+
         for (const auto &user : users)
         {
             file << user.getId() << "|"
@@ -95,92 +126,49 @@ public:
         file.close();
     }
     std::vector<UserAccount> loadUsersFromFile(const std::string &filename)
-{
-    std::ifstream file(filename, std::ios::binary);
-    if (!file.is_open())
-        throw std::runtime_error("Khong the mo file de doc!");
-
-    std::vector<UserAccount> users;
-    std::string line;
-    while (std::getline(file, line))
     {
-        std::istringstream iss(line);
-        int id;
-        std::string name, phone, email, hashedPassword;
-        double balance;
+        std::ifstream file(filename, std::ios::binary);
+        if (!file.is_open())
+            throw std::runtime_error("Khong the mo file de doc!");
 
-        std::getline(iss, name, '|');
-        std::getline(iss, phone, '|');
-        std::getline(iss, email, '|');
-        std::getline(iss, hashedPassword, '|');
-        iss >> balance;
+        std::vector<UserAccount> users;
+        std::string line;
+        while (std::getline(file, line))
+        {
+            std::istringstream iss(line);
+            int id, points;
+            std::string name, phone, email, hashedPassword;
+            double balance;
 
-        users.emplace_back(id, name, phone, email, hashedPassword);
+            // Đọc các trường từ dòng
+            iss >> id;
+            iss.ignore(); // Bỏ qua ký tự phân cách '|'
+            std::getline(iss, name, '|');
+            std::getline(iss, phone, '|');
+            std::getline(iss, email, '|');
+            std::getline(iss, hashedPassword, '|');
+            iss >> balance;
+            iss.ignore(); // Bỏ qua ký tự phân cách '|'
+            iss >> points;
+
+            // Thêm UserAccount vào danh sách
+            users.emplace_back(id, name, phone, email, hashedPassword);
+            users.back().addBalance(balance);                   // Gán số dư
+            users.back().addPoints(points, "Khoi tao tu file"); // Gán điểm
+        }
+        file.close();
+        return users;
     }
-    file.close();
-    return users;
-}
-    // viet cho toi mot ham get all UserAccount
     std::vector<UserAccount> getAllUserAccounts() const
     {
         // lay tu user_account.dat ra
 
         std::vector<UserAccount> userAccounts;
-        userAccounts.push_back(*this); // Chỉ có một tài khoản trong ví dụ này
+        userAccounts.push_back(*this);
         return userAccounts;
     }
 };
 
-// Cau truc khach hang
-class Customer
-{
-private:
-    int id;
-    std::string name;
-    std::string phone;
-    std::string email;
-    double balance;
-    int points;
-    std::vector<Transaction> transactions;
-
-public:
-    Customer(int _id, std::string _name, std::string _phone, std::string _email)
-        : id(_id), name(_name), phone(_phone), email(_email), points(0) {}
-
-    int getId() const { return id; }
-    std::string getName() const { return name; }
-    std::string getPhone() const { return phone; }
-    std::string getEmail() const { return email; }
-
-    int getPoints() const { return points; }
-
-    void addPoints(int value, std::string description)
-    {
-        points += value;
-        transactions.push_back(Transaction(id, value, description, time(nullptr)));
-    }
-
-    void usePoints(int value, std::string description)
-    {
-        if (points >= value)
-        {
-            points -= value;
-            transactions.push_back(Transaction(id, -value, description, time(nullptr)));
-        }
-        else
-        {
-            throw std::runtime_error("Khong du diem de thuc hien giao dich!");
-        }
-    }
-
-    std::vector<Transaction> getTransactionHistory() const
-    {
-        return transactions;
-    }
-};
-
-
-// Cau truc phan thuong
 class Reward
 {
 private:
@@ -205,61 +193,60 @@ public:
 class PointsManager
 {
 private:
-    std::vector<Customer> customers;
+    std::vector<UserAccount> userAccounts;
     std::map<int, Reward> rewards;
-    int nextCustomerId;
+    int nextUserAccountId;
 
-     // Tạo OTP ngẫu nhiên
-     int generateOTP()
-     {
-         std::random_device rd;
-         std::mt19937 gen(rd());
-         std::uniform_int_distribution<> dis(100000, 999999);
-         return dis(gen);
-     }
+    // Tạo OTP ngẫu nhiên
+    int generateOTP()
+    {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<> dis(100000, 999999);
+        return dis(gen);
+    }
 
 public:
-    PointsManager() : nextCustomerId(1) {}
+    PointsManager() : nextUserAccountId(1) {}
 
-     // Chuyển điểm giữa các ví
-     void transferPoints(int fromCustomerId, int toCustomerId, int points)
-     {
-         Customer *fromCustomer = findCustomer(fromCustomerId);
-         Customer *toCustomer = findCustomer(toCustomerId);
- 
-         if (fromCustomer == nullptr)
-         {
-             throw std::runtime_error("Khong tim thay vi nguon!");
-         }
-         if (toCustomer == nullptr)
-         {
-             throw std::runtime_error("Khong tim thay vi dich!");
-         }
- 
-         // Kiểm tra số dư
-         if (fromCustomer->getPoints() < points)
-         {
-             throw std::runtime_error("So du khong du de thuc hien giao dich!");
-         }
- 
-         // Tạo OTP và yêu cầu xác nhận
-         int otp = generateOTP();
-         std::cout << "OTP de xac nhan giao dich: " << otp << std::endl;
-         int userOtp;
-         std::cout << "Nhap OTP: ";
-         std::cin >> userOtp;
- 
-         if (userOtp != otp)
-         {
-             throw std::runtime_error("OTP khong hop le!");
-         }
+    // Chuyển điểm giữa các ví
+    void transferPoints(int fromUserAccountId, int toUserAccountId, int points)
+    {
+        UserAccount *fromUserAccount = findUserAccount(fromUserAccountId);
+        UserAccount *toUserAccount = findUserAccount(toUserAccountId);
 
-         
+        if (fromUserAccount == nullptr)
+        {
+            throw std::runtime_error("Khong tim thay vi nguon!");
+        }
+        if (toUserAccount == nullptr)
+        {
+            throw std::runtime_error("Khong tim thay vi dich!");
+        }
+
+        // Kiểm tra số dư
+        if (fromUserAccount->getPoints() < points)
+        {
+            throw std::runtime_error("So du khong du de thuc hien giao dich!");
+        }
+
+        // Tạo OTP và yêu cầu xác nhận
+        int otp = generateOTP();
+        std::cout << "OTP de xac nhan giao dich: " << otp << std::endl;
+        int userOtp;
+        std::cout << "Nhap OTP: ";
+        std::cin >> userOtp;
+
+        if (userOtp != otp)
+        {
+            throw std::runtime_error("OTP khong hop le!");
+        }
+
         // Thực hiện giao dịch (atomic)
         try
         {
-            fromCustomer->usePoints(points, "Chuyen diem den vi ID: " + std::to_string(toCustomerId));
-            toCustomer->addPoints(points, "Nhan diem tu vi ID: " + std::to_string(fromCustomerId));
+            fromUserAccount->usePoints(points, "Chuyen diem den vi ID: " + std::to_string(toUserAccountId));
+            toUserAccount->addPoints(points, "Nhan diem tu vi ID: " + std::to_string(fromUserAccountId));
             std::cout << "Giao dich thanh cong!" << std::endl;
         }
         catch (const std::exception &e)
@@ -268,52 +255,57 @@ public:
         }
     }
 
-    int registerCustomer(std::string name, std::string phone, std::string email)
+    int registerUserAccount(std::string name, std::string phone, std::string email)
     {
+        nextUserAccountId = getIdMaxOfFile("user_account.dat");
         // Kiem tra trung lap
-        for (const auto &customer : customers)
+        for (const auto &UserAccount : userAccounts)
         {
-            if (customer.getPhone() == phone || customer.getEmail() == email)
+            if (UserAccount.getPhone() == phone || UserAccount.getEmail() == email)
             {
                 throw std::runtime_error("So dien thoai hoac email da duoc dang ky!");
             }
         }
 
-        Customer newCustomer(nextCustomerId, name, phone, email);
-        customers.push_back(newCustomer);
-        return nextCustomerId++;
+        UserAccount newUserAccount(nextUserAccountId, name, phone, email);
+        userAccounts.push_back(newUserAccount);
+        return nextUserAccountId;
     }
 
-    Customer *findCustomer(int id)
+    UserAccount *findUserAccount(int id)
     {
-        for (auto &customer : customers)
+        cout << "ID: " << id << endl;
+        UserAccount newUser;
+        userAccounts = newUser.loadUsersFromFile("user_account.dat");
+        for (auto &UserAccount : userAccounts)
         {
-            if (customer.getId() == id)
+            if (UserAccount.getId() == id)
             {
-                return &customer;
+                cout << "user: " << &UserAccount << endl;
+                return &UserAccount;
             }
         }
         return nullptr;
     }
 
-    Customer *findCustomerByPhone(std::string phone)
+    UserAccount *findUserAccountByPhone(std::string phone)
     {
-        for (auto &customer : customers)
+        for (auto &UserAccount : userAccounts)
         {
-            if (customer.getPhone() == phone)
+            if (UserAccount.getPhone() == phone)
             {
-                return &customer;
+                return &UserAccount;
             }
         }
         return nullptr;
     }
 
-    void addPoints(int customerId, int points, std::string description)
+    void addPoints(int UserAccountId, int points, std::string description)
     {
-        Customer *customer = findCustomer(customerId);
-        if (customer != nullptr)
+        UserAccount *UserAccount = findUserAccount(UserAccountId);
+        if (UserAccount != nullptr)
         {
-            customer->addPoints(points, description);
+            UserAccount->addPoints(points, description);
         }
         else
         {
@@ -321,10 +313,10 @@ public:
         }
     }
 
-    void redeemReward(int customerId, int rewardId)
+    void redeemReward(int UserAccountId, int rewardId)
     {
-        Customer *customer = findCustomer(customerId);
-        if (customer == nullptr)
+        UserAccount *UserAccount = findUserAccount(UserAccountId);
+        if (UserAccount == nullptr)
         {
             throw std::runtime_error("Khong tim thay khach hang!");
         }
@@ -336,12 +328,12 @@ public:
         }
 
         Reward reward = rewardIt->second;
-        if (customer->getPoints() < reward.getPointsRequired())
+        if (UserAccount->getPoints() < reward.getPointsRequired())
         {
             throw std::runtime_error("Khong du diem de doi phan thuong nay!");
         }
 
-        customer->usePoints(reward.getPointsRequired(), "Doi thuong: " + reward.getName());
+        UserAccount->usePoints(reward.getPointsRequired(), "Doi thuong: " + reward.getName());
     }
 
     void addReward(int id, std::string name, std::string description, int pointsRequired)
@@ -349,9 +341,9 @@ public:
         rewards[id] = Reward(id, name, description, pointsRequired);
     }
 
-    std::vector<Customer> getAllCustomers() const
+    std::vector<UserAccount> getAllUserAccounts() const
     {
-        return customers;
+        return userAccounts;
     }
 
     void saveToFile(std::string filename)
@@ -363,17 +355,17 @@ public:
         }
 
         // Ghi du lieu khach hang
-        file << customers.size() << std::endl;
-        for (const auto &customer : customers)
+        file << userAccounts.size() << std::endl;
+        for (const auto &UserAccount : userAccounts)
         {
-            file << customer.getId() << "|"
-                 << customer.getName() << "|"
-                 << customer.getPhone() << "|"
-                 << customer.getEmail() << "|"
-                 << customer.getPoints() << std::endl;
+            file << UserAccount.getId() << "|"
+                 << UserAccount.getName() << "|"
+                 << UserAccount.getPhone() << "|"
+                 << UserAccount.getEmail() << "|"
+                 << UserAccount.getPoints() << std::endl;
 
             // Ghi giao dich
-            auto transactions = customer.getTransactionHistory();
+            auto transactions = UserAccount.getTransactionHistory();
             file << transactions.size() << std::endl;
             for (const auto &trans : transactions)
             {
@@ -395,7 +387,43 @@ public:
 
         file.close();
     }
+    int getIdMaxOfFile(std::string filename)
+    {
+        std::ifstream file(filename);
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Khong the mo file de doc!");
+        }
 
+        if (filename == "user_account.dat")
+        {
+            int maxId = 0; // Biến lưu ID lớn nhất
+            std::string line;
+
+            while (std::getline(file, line))
+            {
+                std::istringstream iss(line);
+                int id;
+                char delimiter;
+
+                // Đọc ID (phần tử đầu tiên trước dấu '|')
+                iss >> id >> delimiter;
+
+                // Cập nhật maxId nếu ID lớn hơn
+                if (id > maxId)
+                {
+                    maxId = id;
+                }
+            }
+
+            file.close();
+
+            // Gán nextUserAccountId bằng maxId + 1
+            nextUserAccountId = maxId + 1;
+        }
+        file.close();
+        return nextUserAccountId;
+    }
     void loadFromFile(std::string filename)
     {
         std::ifstream file(filename);
@@ -404,15 +432,11 @@ public:
             throw std::runtime_error("Khong the mo file de doc!");
         }
 
-        customers.clear();
+        userAccounts.clear();
         rewards.clear();
-
-        // TODO: Doc du lieu tu file
-
         file.close();
     }
 };
-
 
 // Ham menu chinh
 int main()
@@ -426,7 +450,7 @@ int main()
         std::cerr << "Khong the thiet lap locale: " << e.what() << std::endl;
     }
     PointsManager manager;
-    UserAccount userAccount = UserAccount(1, "Nguyen Van A", "0123456789", "abc@gmail.com", "123");
+    UserAccount newUser = UserAccount(1, "Nguyen Van A", "0123456789", "abc@gmail.com", "123");
 
     try
     {
@@ -473,10 +497,11 @@ int main()
 
             try
             {
-                int id = manager.registerCustomer(name, phone, email);
-                std::vector<UserAccount> users; 
-                users.push_back(userAccount);   
-                userAccount.saveUsersToFile(users, "user_account.dat"); 
+                int id = manager.registerUserAccount(name, phone, email);
+                std::vector<UserAccount> users = newUser.loadUsersFromFile("user_account.dat");
+                newUser = UserAccount(id, name, phone, email);
+                users.push_back(newUser);
+                newUser.saveUsersToFile(users, "user_account.dat");
                 std::cout << "Dang ky thanh cong! ID khach hang: " << id << std::endl;
             }
             catch (const std::exception &e)
@@ -491,14 +516,14 @@ int main()
             std::cout << "Nhap so dien thoai khach hang: ";
             std::cin >> phone;
 
-            Customer *customer = manager.findCustomerByPhone(phone);
-            if (customer != nullptr)
+            UserAccount *UserAccount = manager.findUserAccountByPhone(phone);
+            if (UserAccount != nullptr)
             {
-                std::cout << "ID: " << customer->getId() << std::endl;
-                std::cout << "Ten: " << customer->getName() << std::endl;
-                std::cout << "Dien thoai: " << customer->getPhone() << std::endl;
-                std::cout << "Email: " << customer->getEmail() << std::endl;
-                std::cout << "Diem hien tai: " << customer->getPoints() << std::endl;
+                std::cout << "ID: " << UserAccount->getId() << std::endl;
+                std::cout << "Ten: " << UserAccount->getName() << std::endl;
+                std::cout << "Dien thoai: " << UserAccount->getPhone() << std::endl;
+                std::cout << "Email: " << UserAccount->getEmail() << std::endl;
+                std::cout << "Diem hien tai: " << UserAccount->getPoints() << std::endl;
             }
             else
             {
@@ -531,15 +556,15 @@ int main()
         }
         case 4:
         {
-            int customerId, rewardId;
+            int UserAccountId, rewardId;
             std::cout << "Nhap ID khach hang: ";
-            std::cin >> customerId;
+            std::cin >> UserAccountId;
             std::cout << "Nhap ID phan thuong: ";
             std::cin >> rewardId;
 
             try
             {
-                manager.redeemReward(customerId, rewardId);
+                manager.redeemReward(UserAccountId, rewardId);
                 std::cout << "Doi phan thuong thanh cong!" << std::endl;
             }
             catch (const std::exception &e)
@@ -554,10 +579,10 @@ int main()
             std::cout << "Nhap ID khach hang: ";
             std::cin >> id;
 
-            Customer *customer = manager.findCustomer(id);
-            if (customer != nullptr)
+            UserAccount *UserAccount = manager.findUserAccount(id);
+            if (UserAccount != nullptr)
             {
-                auto transactions = customer->getTransactionHistory();
+                auto transactions = UserAccount->getTransactionHistory();
                 if (transactions.empty())
                 {
                     std::cout << "Khach hang chua co giao dich nao!" << std::endl;
@@ -590,7 +615,7 @@ int main()
         }
         case 6:
         {
-            auto customers = userAccount.loadUsersFromFile("user_account.dat");
+            auto UserAccounts = newUser.loadUsersFromFile("user_account.dat");
             std::cout << "DANH SACH KHACH HANG:\n";
             std::cout << "-----------------------------------------\n";
             std::cout << std::left << std::setw(5) << "ID"
@@ -599,14 +624,13 @@ int main()
                       << std::setw(25) << "Email"
                       << "Diem\n";
             std::cout << "-----------------------------------------\n";
-
-            for (const auto &customer : customers)
+            for (const auto &UserAccount : UserAccounts)
             {
-                std::cout << std::left << std::setw(5) << customer.getId()
-                          << std::setw(20) << customer.getName()
-                          << std::setw(15) << customer.getPhone()
-                          << std::setw(25) << customer.getEmail()
-                          << customer.getBalance() << std::endl;
+                std::cout << std::left << std::setw(5) << UserAccount.getId()
+                          << std::setw(20) << UserAccount.getName()
+                          << std::setw(15) << UserAccount.getPhone()
+                          << std::setw(25) << UserAccount.getEmail()
+                          << UserAccount.getBalance() << std::endl;
             }
             break;
         }
