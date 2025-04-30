@@ -11,13 +11,13 @@
 #include <sstream>
 #include <algorithm>
 
-// Lớp User: Quản lý thông tin người dùng
+// Lop User: Quan ly thong tin nguoi dung
 class User
 {
 private:
     std::string userId;
     std::string username;
-    std::string passwordHash; // Mật khẩu đã được mã hóa
+    std::string passwordHash; // Mat khau da duoc ma hoa
     std::string fullName;
     std::string email;
     std::string phone;
@@ -49,14 +49,14 @@ public:
     void setPhone(const std::string &ph) { phone = ph; }
     void setIsAdmin(bool admin) { isAdmin = admin; }
 
-    // Chuyển đổi thành chuỗi để lưu vào file
+    // Chuyen doi thanh chuoi de luu vao file
     std::string toString() const
     {
         return userId + "," + username + "," + passwordHash + "," +
                fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0");
     }
 
-    // Tạo đối tượng User từ chuỗi
+    // Tao doi tuong User tu chuoi
     static User fromString(const std::string &str)
     {
         User user;
@@ -98,7 +98,7 @@ public:
     }
 };
 
-// Lớp Wallet: Quản lý ví điểm thưởng
+// Lop Wallet: Quan ly vi diem thuong
 class Wallet
 {
 private:
@@ -122,14 +122,14 @@ public:
     void setUserId(const std::string &id) { userId = id; }
     void setBalance(double bal) { balance = bal; }
 
-    // Thêm điểm vào ví
+    // Them diem vao vi
     bool addPoints(double points)
     {
         balance += points;
         return true;
     }
 
-    // Trừ điểm từ ví
+    // Tru diem tu vi
     bool subtractPoints(double points)
     {
         if (balance >= points)
@@ -140,13 +140,13 @@ public:
         return false;
     }
 
-    // Chuyển đổi thành chuỗi để lưu vào file
+    // Chuyen doi thanh chuoi de luu vao file
     std::string toString() const
     {
         return walletId + "," + userId + "," + std::to_string(balance);
     }
 
-    // Tạo đối tượng Wallet từ chuỗi
+    // Tao doi tuong Wallet tu chuoi
     static Wallet fromString(const std::string &str)
     {
         Wallet wallet;
@@ -176,7 +176,7 @@ public:
     }
 };
 
-// Lớp Transaction: Quản lý giao dịch
+// Lop Transaction: Quan ly giao dich
 class Transaction
 {
 private:
@@ -214,14 +214,14 @@ public:
     void setStatus(const std::string &stat) { status = stat; }
     void setDescription(const std::string &desc) { description = desc; }
 
-    // Chuyển đổi thành chuỗi để lưu vào file
+    // Chuyen doi thanh chuoi de luu vao file
     std::string toString() const
     {
         return transactionId + "," + fromWalletId + "," + toWalletId + "," +
                std::to_string(amount) + "," + timestamp + "," + status + "," + description;
     }
 
-    // Tạo đối tượng Transaction từ chuỗi
+    // Tao doi tuong Transaction tu chuoi
     static Transaction fromString(const std::string &str)
     {
         Transaction transaction;
@@ -258,12 +258,12 @@ public:
             }
             i++;
         }
-        transaction.setDescription(s); // Phần còn lại là description
+        transaction.setDescription(s); // Phan con lai la description
         return transaction;
     }
 };
 
-// Lớp quản lý dữ liệu
+// Lop quan ly du lieu
 class DataManager
 {
 private:
