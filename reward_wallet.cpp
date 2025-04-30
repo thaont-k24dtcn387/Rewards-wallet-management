@@ -275,9 +275,7 @@ private:
     std::vector<Wallet> wallets;
     std::vector<Transaction> transactions;
 
-   
-
-    // Tạo ID ngẫu nhiên duy nhất
+    // Tao ID ngau nhien duy nhat
     std::string generateUniqueId()
     {
         auto now = std::chrono::system_clock::now();
@@ -292,7 +290,7 @@ private:
         return ss.str() + std::to_string(dis(gen));
     }
 
-    // Lấy thời gian hiện tại dưới dạng chuỗi
+    // Lay thoi gian hien tai duoi dang chuoi
     std::string getCurrentTimestamp()
     {
         auto now = std::chrono::system_clock::now();
@@ -308,14 +306,15 @@ public:
         loadData();
     }
     std::vector<User> users;
-    
+
     std::string hashPassword(const std::string &password)
     {
         std::hash<std::string> hasher;
         size_t hash = hasher(password);
         return std::to_string(hash);
     }
-    // Đọc dữ liệu từ file
+
+    // Doc du lieu tu file
     void loadData()
     {
         loadUsers();
@@ -323,7 +322,7 @@ public:
         loadTransactions();
     }
 
-    // Đọc dữ liệu người dùng từ file
+    // Doc du lieu nguoi dung tu file
     void loadUsers()
     {
         users.clear();
@@ -343,7 +342,7 @@ public:
         }
     }
 
-    // Đọc dữ liệu ví từ file
+    // Doc du lieu vi tu file
     void loadWallets()
     {
         wallets.clear();
@@ -363,7 +362,7 @@ public:
         }
     }
 
-    // Đọc dữ liệu giao dịch từ file
+    // Doc du lieu giao dich tu file
     void loadTransactions()
     {
         transactions.clear();
@@ -383,16 +382,16 @@ public:
         }
     }
 
-    // Lưu dữ liệu vào file
+    // Luu du lieu vao file
     void saveData()
     {
         saveUsers();
         saveWallets();
         saveTransactions();
-        backupData(); // Sao lưu sau mỗi lần lưu
+        backupData(); // Sao luu sau moi lan luu
     }
 
-    // Lưu dữ liệu người dùng vào file
+    // Luu du lieu nguoi dung vao file
     void saveUsers()
     {
         std::ofstream file(usersFile);
@@ -406,7 +405,7 @@ public:
         }
     }
 
-    // Lưu dữ liệu ví vào file
+    // Luu du lieu vi vao file
     void saveWallets()
     {
         std::ofstream file(walletsFile);
@@ -420,7 +419,7 @@ public:
         }
     }
 
-    // Lưu dữ liệu giao dịch vào file
+    // Luu du lieu giao dich vao file
     void saveTransactions()
     {
         std::ofstream file(transactionsFile);
@@ -434,7 +433,7 @@ public:
         }
     }
 
-    // Sao lưu dữ liệu
+    // Sao luu du lieu
     void backupData()
     {
         std::string timestamp = getCurrentTimestamp();
@@ -445,10 +444,10 @@ public:
         std::string backupWalletFile = backupDir + "wallets_" + timestamp + ".bak";
         std::string backupTransactionFile = backupDir + "transactions_" + timestamp + ".bak";
 
-        // Tạo thư mục backup nếu chưa tồn tại
+        // Tao thu muc backup neu chua ton tai
         system(("mkdir -p " + backupDir).c_str());
 
-        // Sao chép các file dữ liệu vào thư mục backup
+        // Sao chep cac file du lieu vao thu muc backup
         std::ifstream srcUsers(usersFile, std::ios::binary);
         std::ofstream dstUsers(backupUserFile, std::ios::binary);
         dstUsers << srcUsers.rdbuf();
@@ -462,24 +461,24 @@ public:
         dstTransactions << srcTransactions.rdbuf();
     }
 
-    // Khôi phục dữ liệu từ bản sao lưu
+    // Khoi phuc du lieu tu ban sao luu
     bool restoreData(const std::string &timestamp)
     {
         std::string backupUserFile = backupDir + "users_" + timestamp + ".bak";
         std::string backupWalletFile = backupDir + "wallets_" + timestamp + ".bak";
         std::string backupTransactionFile = backupDir + "transactions_" + timestamp + ".bak";
 
-        // Kiểm tra xem các file backup có tồn tại không
+        // Kiem tra xem cac file backup co ton tai khong
         std::ifstream testUsers(backupUserFile);
         std::ifstream testWallets(backupWalletFile);
         std::ifstream testTransactions(backupTransactionFile);
 
         if (!testUsers || !testWallets || !testTransactions)
         {
-            return false; // Không tìm thấy file backup
+            return false; // Khong tim thay file backup
         }
 
-        // Sao chép từ backup vào file chính
+        // Sao chep tu backup vao file chinh
         std::ifstream srcUsers(backupUserFile, std::ios::binary);
         std::ofstream dstUsers(usersFile, std::ios::binary);
         dstUsers << srcUsers.rdbuf();
@@ -492,23 +491,23 @@ public:
         std::ofstream dstTransactions(transactionsFile, std::ios::binary);
         dstTransactions << srcTransactions.rdbuf();
 
-        // Tải lại dữ liệu từ file
+        // Tai lai du lieu tu file
         loadData();
 
         return true;
     }
 
-    // Tạo và thêm người dùng mới
+    // Tao va them nguoi dung moi
     User createUser(const std::string &username, const std::string &password,
                     const std::string &fullName, const std::string &email,
                     const std::string &phone, bool isAdmin = false)
     {
-        // Kiểm tra xem username đã tồn tại chưa
+        // Kiem tra xem username da ton tai chua
         for (const auto &user : users)
         {
             if (user.getUsername() == username)
             {
-                throw std::runtime_error("Tên người dùng đã tồn tại.");
+                throw std::runtime_error("Ten nguoi dung da ton tai.");
             }
         }
 
@@ -518,14 +517,14 @@ public:
         User newUser(userId, username, passwordHash, fullName, email, phone, isAdmin);
         users.push_back(newUser);
 
-        // Tạo ví cho người dùng mới
+        // Tao vi cho nguoi dung moi
         createWallet(userId);
 
         saveData();
         return newUser;
     }
 
-    // Tạo và thêm ví mới
+    // Tao va them vi moi
     Wallet createWallet(const std::string &userId)
     {
         std::string walletId = "W" + generateUniqueId();
@@ -536,7 +535,7 @@ public:
         return newWallet;
     }
 
-    // Tạo và thêm giao dịch mới
+    // Tao va them giao dich moi
     Transaction createTransaction(const std::string &fromWalletId, const std::string &toWalletId,
                                   double amount, const std::string &description)
     {
@@ -551,33 +550,33 @@ public:
         return newTransaction;
     }
 
-    // Thực hiện giao dịch chuyển điểm
+    // Thuc hien giao dich chuyen diem
     bool executeTransaction(const std::string &transactionId, const std::string &otp)
     {
-        // Tìm giao dịch theo ID
+        // Tim giao dich theo ID
         auto transactionIt = std::find_if(transactions.begin(), transactions.end(),
                                           [&transactionId](const Transaction &t)
                                           { return t.getTransactionId() == transactionId; });
 
         if (transactionIt == transactions.end() || transactionIt->getStatus() != "pending")
         {
-            return false; // Không tìm thấy giao dịch hoặc giao dịch không ở trạng thái pending
+            return false; // Khong tim thay giao dich hoac giao dich khong o trang thai pending
         }
 
-        // Xác thực OTP (đây là ví dụ đơn giản, trong thực tế cần một hệ thống OTP an toàn hơn)
+        // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
         if (otp != "123456")
-        { // OTP mẫu
+        { // OTP mau
             transactionIt->setStatus("failed");
             saveData();
             return false;
         }
 
-        // Tìm ví nguồn
+        // Tim vi nguon
         auto fromWalletIt = std::find_if(wallets.begin(), wallets.end(),
                                          [&](const Wallet &w)
                                          { return w.getWalletId() == transactionIt->getFromWalletId(); });
 
-        // Tìm ví đích
+        // Tim vi dich
         auto toWalletIt = std::find_if(wallets.begin(), wallets.end(),
                                        [&](const Wallet &w)
                                        { return w.getWalletId() == transactionIt->getToWalletId(); });
@@ -586,20 +585,20 @@ public:
         {
             transactionIt->setStatus("failed");
             saveData();
-            return false; // Không tìm thấy ví nguồn hoặc ví đích
+            return false; // Khong tim thay vi nguon hoac vi dich
         }
 
         double amount = transactionIt->getAmount();
 
-        // Kiểm tra số dư
+        // Kiem tra so du
         if (fromWalletIt->getBalance() < amount)
         {
             transactionIt->setStatus("failed");
             saveData();
-            return false; // Số dư không đủ
+            return false; // So du khong du
         }
 
-        // Thực hiện giao dịch (atomic)
+        // Thuc hien giao dich (atomic)
         try
         {
             fromWalletIt->subtractPoints(amount);
@@ -610,22 +609,22 @@ public:
         }
         catch (const std::exception &e)
         {
-            // Nếu có lỗi, hủy giao dịch
+            // Neu co loi, huy giao dich
             transactionIt->setStatus("failed");
             saveData();
             return false;
         }
     }
 
-    // Tạo OTP (giả lập)
+    // Tao OTP (gia lap)
     std::string generateOTP()
     {
-        // Trong thực tế, OTP sẽ được gửi qua SMS hoặc email
-        // Đây chỉ là ví dụ đơn giản
-        return "123456"; // OTP mẫu
+        // Trong thuc te, OTP se duoc gui qua SMS hoac email
+        // Day chi la vi du don gian
+        return "123456"; // OTP mau
     }
 
-    // Sinh mật khẩu tự động
+    // Sinh mat khau tu dong
     std::string generateRandomPassword()
     {
         const std::string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -635,13 +634,13 @@ public:
 
         std::string password;
         for (int i = 0; i < 10; ++i)
-        { // Mật khẩu 10 ký tự
+        { // Mat khau 10 ky tu
             password += chars[dis(gen)];
         }
         return password;
     }
 
-    // Xác thực đăng nhập
+    // Xac thuc dang nhap
     User *authenticate(const std::string &username, const std::string &password)
     {
         std::string passwordHash = hashPassword(password);
@@ -656,7 +655,7 @@ public:
         return nullptr;
     }
 
-    // Lấy ví của người dùng
+    // Lay vi cua nguoi dung
     Wallet *getWalletByUserId(const std::string &userId)
     {
         for (auto &wallet : wallets)
@@ -669,7 +668,7 @@ public:
         return nullptr;
     }
 
-    // Lấy ví theo ID
+    // Lay vi theo ID
     Wallet *getWalletById(const std::string &walletId)
     {
         for (auto &wallet : wallets)
@@ -682,7 +681,7 @@ public:
         return nullptr;
     }
 
-    // Lấy danh sách giao dịch của ví
+    // Lay danh sach giao dich cua vi
     std::vector<Transaction> getTransactionsByWalletId(const std::string &walletId)
     {
         std::vector<Transaction> result;
@@ -698,7 +697,7 @@ public:
         return result;
     }
 
-    // Lấy người dùng theo username
+    // Lay nguoi dung theo username
     User *getUserByUsername(const std::string &username)
     {
         for (auto &user : users)
@@ -711,7 +710,7 @@ public:
         return nullptr;
     }
 
-    // Lấy người dùng theo ID
+    // Lay nguoi dung theo ID
     User *getUserById(const std::string &userId)
     {
         for (auto &user : users)
@@ -725,26 +724,26 @@ public:
     }
 };
 
-// Lớp quản lý hệ thống
+// Lop quan ly he thong
 class System
 {
 private:
     DataManager dataManager;
     User *currentUser;
 
-    // Hiển thị menu cho người dùng
+    // Hien thi menu cho nguoi dung
     void showUserMenu()
     {
         while (true)
         {
-            std::cout << "\n===== MENU NGƯỜI DÙNG =====\n";
-            std::cout << "1. Xem thông tin cá nhân\n";
-            std::cout << "2. Xem số dư ví\n";
-            std::cout << "3. Xem lịch sử giao dịch\n";
-            std::cout << "4. Chuyển điểm\n";
-            std::cout << "5. Đổi mật khẩu\n";
-            std::cout << "6. Đăng xuất\n";
-            std::cout << "Lựa chọn của bạn: ";
+            std::cout << "\n===== MENU NGUOI DUNG =====\n";
+            std::cout << "1. Xem thong tin ca nhan\n";
+            std::cout << "2. Xem so du vi\n";
+            std::cout << "3. Xem lich su giao dich\n";
+            std::cout << "4. Chuyen diem\n";
+            std::cout << "5. Doi mat khau\n";
+            std::cout << "6. Dang xuat\n";
+            std::cout << "Lua chon cua ban: ";
 
             int choice;
             std::cin >> choice;
@@ -770,23 +769,23 @@ private:
                 logout();
                 return;
             default:
-                std::cout << "Lựa chọn không hợp lệ.\n";
+                std::cout << "Lua chon khong hop le.\n";
             }
         }
     }
 
-    // Hiển thị menu cho admin
+    // Hien thi menu cho admin
     void showAdminMenu()
     {
         while (true)
         {
-            std::cout << "\n===== MENU QUẢN TRỊ VIÊN =====\n";
-            std::cout << "1. Tạo tài khoản người dùng mới\n";
-            std::cout << "2. Xem danh sách người dùng\n";
-            std::cout << "3. Sao lưu dữ liệu\n";
-            std::cout << "4. Khôi phục dữ liệu\n";
-            std::cout << "5. Đăng xuất\n";
-            std::cout << "Lựa chọn của bạn: ";
+            std::cout << "\n===== MENU QUAN TRI VIEN =====\n";
+            std::cout << "1. Tao tai khoan nguoi dung moi\n";
+            std::cout << "2. Xem danh sach nguoi dung\n";
+            std::cout << "3. Sao luu du lieu\n";
+            std::cout << "4. Khoi phuc du lieu\n";
+            std::cout << "5. Dang xuat\n";
+            std::cout << "Lua chon cua ban: ";
 
             int choice;
             std::cin >> choice;
@@ -809,69 +808,68 @@ private:
                 logout();
                 return;
             default:
-                std::cout << "Lựa chọn không hợp lệ.\n";
+                std::cout << "Lua chon khong hop le.\n";
             }
         }
     }
 
-    // Hiển thị thông tin người dùng
+    // Hien thi thong tin nguoi dung
     void showUserInfo()
     {
-        std::cout << "\n===== THÔNG TIN CÁ NHÂN =====\n";
+        std::cout << "\n===== THONG TIN CA NHAN =====\n";
         std::cout << "ID: " << currentUser->getUserId() << std::endl;
-        std::cout << "Tên đăng nhập: " << currentUser->getUsername() << std::endl;
-        std::cout << "Họ tên: " << currentUser->getFullName() << std::endl;
+        std::cout << "Ten dang nhap: " << currentUser->getUsername() << std::endl;
+        std::cout << "Ho ten: " << currentUser->getFullName() << std::endl;
         std::cout << "Email: " << currentUser->getEmail() << std::endl;
-        std::cout << "Số điện thoại: " << currentUser->getPhone() << std::endl;
-        std::cout << "Loại tài khoản: " << (currentUser->getIsAdmin() ? "Quản trị viên" : "Người dùng") << std::endl;
+        std::cout << "So dien thoai: " << currentUser->getPhone() << std::endl;
+        std::cout << "Loai tai khoan: " << (currentUser->getIsAdmin() ? "Quan tri vien" : "Nguoi dung") << std::endl;
     }
 
-    // Hiển thị số dư ví
+    // Hien thi so du vi
     void showWalletBalance()
     {
         Wallet *wallet = dataManager.getWalletByUserId(currentUser->getUserId());
 
         if (wallet)
         {
-            std::cout << "\n===== SỐ DƯ VÍ =====\n";
-            std::cout
-                << "ID ví: " << wallet->getWalletId() << std::endl;
-            std::cout << "Số dư: " << wallet->getBalance() << " điểm" << std::endl;
+            std::cout << "\n===== SO DU VI =====\n";
+            std::cout << "ID vi: " << wallet->getWalletId() << std::endl;
+            std::cout << "So du: " << wallet->getBalance() << " diem" << std::endl;
         }
         else
         {
-            std::cout << "Không tìm thấy thông tin ví.\n";
+            std::cout << "Khong tim thay thong tin vi.\n";
         }
     }
 
-    // Hiển thị lịch sử giao dịch
+    // Hien thi lich su giao dich
     void showTransactionHistory()
     {
         Wallet *wallet = dataManager.getWalletByUserId(currentUser->getUserId());
 
         if (!wallet)
         {
-            std::cout << "Không tìm thấy thông tin ví.\n";
+            std::cout << "Khong tim thay thong tin vi.\n";
             return;
         }
 
         std::vector<Transaction> transactions = dataManager.getTransactionsByWalletId(wallet->getWalletId());
 
-        std::cout << "\n===== LỊCH SỬ GIAO DỊCH =====\n";
+        std::cout << "\n===== LICH SU GIAO DICH =====\n";
 
         if (transactions.empty())
         {
-            std::cout << "Chưa có giao dịch nào.\n";
+            std::cout << "Chua co giao dich nao.\n";
             return;
         }
 
         std::cout << std::left << std::setw(12) << "ID GD"
-                  << std::setw(12) << "TỪ VÍ"
-                  << std::setw(12) << "ĐẾN VÍ"
-                  << std::setw(10) << "SỐ ĐIỂM"
-                  << std::setw(20) << "THỜI GIAN"
-                  << std::setw(10) << "TRẠNG THÁI"
-                  << "MÔ TẢ\n";
+                  << std::setw(12) << "TU VI"
+                  << std::setw(12) << "DEN VI"
+                  << std::setw(10) << "SO DIEM"
+                  << std::setw(20) << "THOI GIAN"
+                  << std::setw(10) << "TRANG THAI"
+                  << "MO TA\n";
 
         for (const auto &transaction : transactions)
         {
@@ -885,16 +883,16 @@ private:
         }
     }
 
-    // Chuyển điểm từ ví của người dùng hiện tại sang ví khác
+    // Chuyen diem tu vi cua nguoi dung hien tai sang vi khac
     void transferPoints()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         Wallet *fromWallet = dataManager.getWalletByUserId(currentUser->getUserId());
 
         if (!fromWallet)
         {
-            std::cout << "Không tìm thấy thông tin ví.\n";
+            std::cout << "Khong tim thay thong tin vi.\n";
             return;
         }
 
@@ -902,186 +900,186 @@ private:
         double amount;
         std::string description;
 
-        std::cout << "\n===== CHUYỂN ĐIỂM =====\n";
-        std::cout << "Nhập ID ví nhận: ";
+        std::cout << "\n===== CHUYEN DIEM =====\n";
+        std::cout << "Nhap ID vi nhan: ";
         std::getline(std::cin, toWalletId);
 
-        // Kiểm tra ví đích
+        // Kiem tra vi dich
         Wallet *toWallet = dataManager.getWalletById(toWalletId);
         if (!toWallet)
         {
-            std::cout << "Không tìm thấy ví đích.\n";
+            std::cout << "Khong tim thay vi dich.\n";
             return;
         }
 
-        // Không cho phép chuyển điểm cho chính mình
+        // Khong cho phep chuyen diem cho chinh minh
         if (fromWallet->getWalletId() == toWalletId)
         {
-            std::cout << "Không thể chuyển điểm cho chính mình.\n";
+            std::cout << "Khong the chuyen diem cho chinh minh.\n";
             return;
         }
 
-        std::cout << "Nhập số điểm cần chuyển: ";
+        std::cout << "Nhap so diem can chuyen: ";
         std::cin >> amount;
 
-        // Kiểm tra số điểm cần chuyển
+        // Kiem tra so diem can chuyen
         if (amount <= 0)
         {
-            std::cout << "Số điểm phải lớn hơn 0.\n";
+            std::cout << "So diem phai lon hon 0.\n";
             return;
         }
 
         if (fromWallet->getBalance() < amount)
         {
-            std::cout << "Số dư không đủ.\n";
+            std::cout << "So du khong du.\n";
             return;
         }
 
-        std::cin.ignore(); // Xóa bộ đệm
-        std::cout << "Nhập mô tả giao dịch: ";
+        std::cin.ignore(); // Xoa bo dem
+        std::cout << "Nhap mo ta giao dich: ";
         std::getline(std::cin, description);
 
-        // Tạo giao dịch
+        // Tao giao dich
         Transaction transaction = dataManager.createTransaction(fromWallet->getWalletId(), toWalletId, amount, description);
 
         // Sinh OTP
         std::string otp = dataManager.generateOTP();
-        std::cout << "Mã OTP của bạn là: " << otp << std::endl;
+        std::cout << "Ma OTP cua ban la: " << otp << std::endl;
 
-        // Xác nhận OTP
+        // Xac nhan OTP
         std::string inputOTP;
-        std::cout << "Nhập mã OTP để xác nhận giao dịch: ";
+        std::cout << "Nhap ma OTP de xac nhan giao dich: ";
         std::cin >> inputOTP;
 
-        // Thực hiện giao dịch
+        // Thuc hien giao dich
         bool success = dataManager.executeTransaction(transaction.getTransactionId(), inputOTP);
 
         if (success)
         {
-            std::cout << "Chuyển điểm thành công.\n";
+            std::cout << "Chuyen diem thanh cong.\n";
         }
         else
         {
-            std::cout << "Chuyển điểm thất bại. Vui lòng kiểm tra lại OTP hoặc thử lại sau.\n";
+            std::cout << "Chuyen diem that bai. Vui long kiem tra lai OTP hoac thu lai sau.\n";
         }
     }
 
-    // Đổi mật khẩu
+    // Doi mat khau
     void changePassword()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         std::string currentPassword, newPassword, confirmPassword;
 
-        std::cout << "\n===== ĐỔI MẬT KHẨU =====\n";
-        std::cout << "Nhập mật khẩu hiện tại: ";
+        std::cout << "\n===== DOI MAT KHAU =====\n";
+        std::cout << "Nhap mat khau hien tai: ";
         std::getline(std::cin, currentPassword);
 
-        // Xác thực mật khẩu hiện tại
+        // Xac thuc mat khau hien tai
         if (dataManager.hashPassword(currentPassword) != currentUser->getPasswordHash())
         {
-            std::cout << "Mật khẩu hiện tại không đúng.\n";
+            std::cout << "Mat khau hien tai khong dung.\n";
             return;
         }
 
-        std::cout << "Nhập mật khẩu mới: ";
+        std::cout << "Nhap mat khau moi: ";
         std::getline(std::cin, newPassword);
 
-        std::cout << "Xác nhận mật khẩu mới: ";
+        std::cout << "Xac nhan mat khau moi: ";
         std::getline(std::cin, confirmPassword);
 
         if (newPassword != confirmPassword)
         {
-            std::cout << "Mật khẩu xác nhận không khớp.\n";
+            std::cout << "Mat khau xac nhan khong khop.\n";
             return;
         }
 
-        // Cập nhật mật khẩu
+        // Cap nhat mat khau
         currentUser->setPasswordHash(dataManager.hashPassword(newPassword));
         dataManager.saveData();
 
-        std::cout << "Đổi mật khẩu thành công.\n";
+        std::cout << "Doi mat khau thanh cong.\n";
     }
 
-    // Đăng xuất
+    // Dang xuat
     void logout()
     {
         currentUser = nullptr;
-        std::cout << "Đã đăng xuất thành công.\n";
+        std::cout << "Da dang xuat thanh cong.\n";
     }
 
-    // Tạo người dùng mới (chỉ dành cho admin)
+    // Tao nguoi dung moi (chi danh cho admin)
     void createNewUser()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         std::string username, password, fullName, email, phone;
         bool isAdmin;
 
-        std::cout << "\n===== TẠO NGƯỜI DÙNG MỚI =====\n";
-        std::cout << "Nhập tên đăng nhập: ";
+        std::cout << "\n===== TAO NGUOI DUNG MOI =====\n";
+        std::cout << "Nhap ten dang nhap: ";
         std::getline(std::cin, username);
 
-        // Kiểm tra xem username đã tồn tại chưa
+        // Kiem tra xem username da ton tai chua
         if (dataManager.getUserByUsername(username))
         {
-            std::cout << "Tên đăng nhập đã tồn tại.\n";
+            std::cout << "Ten dang nhap da ton tai.\n";
             return;
         }
 
-        std::cout << "Tạo mật khẩu tự động? (1-Có, 0-Không): ";
+        std::cout << "Tao mat khau tu dong? (1-Co, 0-Khong): ";
         int autoGen;
         std::cin >> autoGen;
 
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         if (autoGen == 1)
         {
             password = dataManager.generateRandomPassword();
-            std::cout << "Mật khẩu được tạo tự động: " << password << std::endl;
+            std::cout << "Mat khau duoc tao tu dong: " << password << std::endl;
         }
         else
         {
-            std::cout << "Nhập mật khẩu: ";
+            std::cout << "Nhap mat khau: ";
             std::getline(std::cin, password);
         }
 
-        std::cout << "Nhập họ tên: ";
+        std::cout << "Nhap ho ten: ";
         std::getline(std::cin, fullName);
 
-        std::cout << "Nhập email: ";
+        std::cout << "Nhap email: ";
         std::getline(std::cin, email);
 
-        std::cout << "Nhập số điện thoại: ";
+        std::cout << "Nhap so dien thoai: ";
         std::getline(std::cin, phone);
 
-        std::cout << "Là quản trị viên? (1-Có, 0-Không): ";
+        std::cout << "La quan tri vien? (1-Co, 0-Khong): ";
         std::cin >> isAdmin;
 
         try
         {
             User newUser = dataManager.createUser(username, password, fullName, email, phone, isAdmin);
-            std::cout << "Tạo tài khoản thành công.\n";
-            std::cout << "ID người dùng: " << newUser.getUserId() << std::endl;
+            std::cout << "Tao tai khoan thanh cong.\n";
+            std::cout << "ID nguoi dung: " << newUser.getUserId() << std::endl;
         }
         catch (const std::exception &e)
         {
-            std::cout << "Lỗi: " << e.what() << std::endl;
+            std::cout << "Loi: " << e.what() << std::endl;
         }
     }
 
-    // Hiển thị danh sách người dùng (chỉ dành cho admin)
+    // Hien thi danh sach nguoi dung (chi danh cho admin)
     void showAllUsers()
     {
         std::vector<User> &users = dataManager.users;
 
-        std::cout << "\n===== DANH SÁCH NGƯỜI DÙNG =====\n";
+        std::cout << "\n===== DANH SACH NGUOI DUNG =====\n";
         std::cout << std::left << std::setw(12) << "ID"
-                  << std::setw(20) << "TÊN ĐĂNG NHẬP"
-                  << std::setw(30) << "HỌ TÊN"
+                  << std::setw(20) << "TEN DANG NHAP"
+                  << std::setw(30) << "HO TEN"
                   << std::setw(30) << "EMAIL"
-                  << std::setw(15) << "SỐ ĐIỆN THOẠI"
-                  << "LOẠI\n";
+                  << std::setw(15) << "SO DIEN THOAI"
+                  << "LOAI\n";
 
         for (const auto &user : users)
         {
@@ -1090,61 +1088,61 @@ private:
                       << std::setw(30) << user.getFullName()
                       << std::setw(30) << user.getEmail()
                       << std::setw(15) << user.getPhone()
-                      << (user.getIsAdmin() ? "Quản trị viên" : "Người dùng") << std::endl;
+                      << (user.getIsAdmin() ? "Quan tri vien" : "Nguoi dung") << std::endl;
         }
     }
 
-    // Sao lưu dữ liệu
+    // Sao luu du lieu
     void backupData()
     {
         dataManager.backupData();
-        std::cout << "Đã sao lưu dữ liệu thành công.\n";
+        std::cout << "Da sao luu du lieu thanh cong.\n";
     }
 
-    // Khôi phục dữ liệu
+    // Khoi phuc du lieu
     void restoreData()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         std::string timestamp;
-        std::cout << "\n===== KHÔI PHỤC DỮ LIỆU =====\n";
-        std::cout << "Nhập thời gian sao lưu (định dạng YYYY-MM-DD_HH-MM-SS): ";
+        std::cout << "\n===== KHOI PHUC DU LIEU =====\n";
+        std::cout << "Nhap thoi gian sao luu (dinh dang YYYY-MM-DD_HH-MM-SS): ";
         std::getline(std::cin, timestamp);
 
         bool success = dataManager.restoreData(timestamp);
 
         if (success)
         {
-            std::cout << "Khôi phục dữ liệu thành công.\n";
+            std::cout << "Khoi phuc du lieu thanh cong.\n";
         }
         else
         {
-            std::cout << "Không tìm thấy bản sao lưu tại thời điểm này.\n";
+            std::cout << "Khong tim thay ban sao luu tai thoi diem nay.\n";
         }
     }
 
 public:
     System() : currentUser(nullptr)
     {
-        // Kiểm tra xem đã có tài khoản admin mặc định chưa
+        // Kiem tra xem da co tai khoan admin mac dinh chua
         User *admin = dataManager.getUserByUsername("admin");
         if (!admin)
         {
             try
             {
                 dataManager.createUser("admin", "admin123", "Administrator", "admin@example.com", "0123456789", true);
-                std::cout << "Đã tạo tài khoản quản trị mặc định.\n";
-                std::cout << "Tên đăng nhập: admin\n";
-                std::cout << "Mật khẩu: admin123\n";
+                std::cout << "Da tao tai khoan quan tri mac dinh.\n";
+                std::cout << "Ten dang nhap: admin\n";
+                std::cout << "Mat khau: admin123\n";
             }
             catch (const std::exception &e)
             {
-                std::cout << "Lỗi khi tạo tài khoản quản trị: " << e.what() << std::endl;
+                std::cout << "Loi khi tao tai khoan quan tri: " << e.what() << std::endl;
             }
         }
     }
 
-    // Hiển thị menu chính
+    // Hien thi menu chinh
     void showMainMenu()
     {
         while (true)
@@ -1162,11 +1160,11 @@ public:
             }
             else
             {
-                std::cout << "\n===== HỆ THỐNG ĐĂNG NHẬP VÀ VÍ ĐIỂM THƯỞNG =====\n";
-                std::cout << "1. Đăng nhập\n";
-                std::cout << "2. Đăng ký\n";
-                std::cout << "3. Thoát\n";
-                std::cout << "Lựa chọn của bạn: ";
+                std::cout << "\n===== HE THONG DANG NHAP VA VI DIEM THUONG =====\n";
+                std::cout << "1. Dang nhap\n";
+                std::cout << "2. Dang ky\n";
+                std::cout << "3. Thoat\n";
+                std::cout << "Lua chon cua ban: ";
 
                 int choice;
                 std::cin >> choice;
@@ -1180,89 +1178,89 @@ public:
                     registerUser();
                     break;
                 case 3:
-                    std::cout << "Cảm ơn bạn đã sử dụng hệ thống. Tạm biệt!\n";
+                    std::cout << "Cam on ban da su dung he thong. Tam biet!\n";
                     return;
                 default:
-                    std::cout << "Lựa chọn không hợp lệ.\n";
+                    std::cout << "Lua chon khong hop le.\n";
                 }
             }
         }
     }
 
-    // Đăng nhập
+    // Dang nhap
     void login()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         std::string username, password;
 
-        std::cout << "\n===== ĐĂNG NHẬP =====\n";
-        std::cout << "Tên đăng nhập: ";
+        std::cout << "\n===== DANG NHAP =====\n";
+        std::cout << "Ten dang nhap: ";
         std::getline(std::cin, username);
 
-        std::cout << "Mật khẩu: ";
+        std::cout << "Mat khau: ";
         std::getline(std::cin, password);
 
         currentUser = dataManager.authenticate(username, password);
 
         if (currentUser)
         {
-            std::cout << "Đăng nhập thành công. Xin chào, " << currentUser->getFullName() << "!\n";
+            std::cout << "Dang nhap thanh cong. Xin chao, " << currentUser->getFullName() << "!\n";
         }
         else
         {
-            std::cout << "Đăng nhập thất bại. Tên đăng nhập hoặc mật khẩu không đúng.\n";
+            std::cout << "Dang nhap that bai. Ten dang nhap hoac mat khau khong dung.\n";
         }
     }
 
-    // Đăng ký người dùng mới
+    // Dang ky nguoi dung moi
     void registerUser()
     {
-        std::cin.ignore(); // Xóa bộ đệm
+        std::cin.ignore(); // Xoa bo dem
 
         std::string username, password, confirmPassword, fullName, email, phone;
 
-        std::cout << "\n===== ĐĂNG KÝ =====\n";
-        std::cout << "Nhập tên đăng nhập: ";
+        std::cout << "\n===== DANG KY =====\n";
+        std::cout << "Nhap ten dang nhap: ";
         std::getline(std::cin, username);
 
-        // Kiểm tra xem username đã tồn tại chưa
+        // Kiem tra xem username da ton tai chua
         if (dataManager.getUserByUsername(username))
         {
-            std::cout << "Tên đăng nhập đã tồn tại.\n";
+            std::cout << "Ten dang nhap da ton tai.\n";
             return;
         }
 
-        std::cout << "Nhập mật khẩu: ";
+        std::cout << "Nhap mat khau: ";
         std::getline(std::cin, password);
 
-        std::cout << "Xác nhận mật khẩu: ";
+        std::cout << "Xac nhan mat khau: ";
         std::getline(std::cin, confirmPassword);
 
         if (password != confirmPassword)
         {
-            std::cout << "Mật khẩu xác nhận không khớp.\n";
+            std::cout << "Mat khau xac nhan khong khop.\n";
             return;
         }
 
-        std::cout << "Nhập họ tên: ";
+        std::cout << "Nhap ho ten: ";
         std::getline(std::cin, fullName);
 
-        std::cout << "Nhập email: ";
+        std::cout << "Nhap email: ";
         std::getline(std::cin, email);
 
-        std::cout << "Nhập số điện thoại: ";
+        std::cout << "Nhap so dien thoai: ";
         std::getline(std::cin, phone);
 
         try
         {
             User newUser = dataManager.createUser(username, password, fullName, email, phone);
-            std::cout << "Đăng ký thành công.\n";
+            std::cout << "Dang ky thanh cong.\n";
             currentUser = dataManager.getUserByUsername(username);
         }
         catch (const std::exception &e)
         {
-            std::cout << "Lỗi: " << e.what() << std::endl;
+            std::cout << "Loi: " << e.what() << std::endl;
         }
     }
 };
