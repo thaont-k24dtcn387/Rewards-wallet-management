@@ -93,10 +93,13 @@ public:
             case 5:
                 user.setPhone(token);
                 break;
+            case 6:
+                user.setIsAdmin(token == "1");
+                break;
             }
             i++;
         }
-        user.setIsAdmin(s == "1");
+        user.setIsGenPassword(s == "1");
         return user;
     }
 };
@@ -1214,10 +1217,14 @@ public:
         {
             std::cout << "Dang nhap that bai. Ten dang nhap hoac mat khau khong dung.\n";
         }
+        std::cout << currentUser->getUsername() << std::endl;
+        std::cout << currentUser->getIsAdmin() << std::endl;
         if(currentUser && currentUser->getIsGenPassword())
         {
             std::cout << "Mat khau da duoc tao tu dong. Vui long doi mat khau.\n";
             changePassword();
+            currentUser->setIsGenPassword(false); 
+            dataManager.saveData(); 
         }
     }
 
