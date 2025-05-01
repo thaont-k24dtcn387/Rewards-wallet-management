@@ -54,6 +54,8 @@
         "typeinfo": "cpp",
         "variant": "cpp",
         "*.tcc": "cpp",
-        "cstdarg": "cpp"
+        "cstdarg": "cpp",
+        "chrono": "cpp",
+        "ratio": "cpp"
     }
 }

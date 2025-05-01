@@ -22,14 +22,15 @@ private:
     std::string email;
     std::string phone;
     bool isAdmin;
+    bool isGenPassword; 
 
 public:
     User() : isAdmin(false) {}
 
     User(const std::string &id, const std::string &username, const std::string &passwordHash,
-         const std::string &fullName, const std::string &email, const std::string &phone, bool isAdmin = false)
+         const std::string &fullName, const std::string &email, const std::string &phone, bool isAdmin = false, bool isGenPassword = false)
         : userId(id), username(username), passwordHash(passwordHash),
-          fullName(fullName), email(email), phone(phone), isAdmin(isAdmin) {}
+          fullName(fullName), email(email), phone(phone), isAdmin(isAdmin), isGenPassword(isGenPassword) {}
 
     // Getters
     std::string getUserId() const { return userId; }
@@ -39,6 +40,7 @@ public:
     std::string getEmail() const { return email; }
     std::string getPhone() const { return phone; }
     bool getIsAdmin() const { return isAdmin; }
+    bool getIsGenPassword() const { return isGenPassword; }
 
     // Setters
     void setUserId(const std::string &id) { userId = id; }
@@ -48,12 +50,13 @@ public:
     void setEmail(const std::string &mail) { email = mail; }
     void setPhone(const std::string &ph) { phone = ph; }
     void setIsAdmin(bool admin) { isAdmin = admin; }
+    void setIsGenPassword(bool genPassword) { isGenPassword = genPassword; }
 
     // Chuyen doi thanh chuoi de luu vao file
     std::string toString() const
     {
         return userId + "," + username + "," + passwordHash + "," +
-               fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0");
+               fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0")+ "," + (isGenPassword ? "1" : "0");
     }
 
     // Tao doi tuong User tu chuoi
@@ -500,7 +503,7 @@ public:
     // Tao va them nguoi dung moi
     User createUser(const std::string &username, const std::string &password,
                     const std::string &fullName, const std::string &email,
-                    const std::string &phone, bool isAdmin = false)
+                    const std::string &phone, bool isAdmin = false, bool isGenPassword = false)
     {
         // Kiem tra xem username da ton tai chua
         for (const auto &user : users)
@@ -514,7 +517,7 @@ public:
         std::string userId = generateUniqueId();
         std::string passwordHash = hashPassword(password);
 
-        User newUser(userId, username, passwordHash, fullName, email, phone, isAdmin);
+        User newUser(userId, username, passwordHash, fullName, email, phone, isAdmin, isGenPassword);
         users.push_back(newUser);
 
         // Tao vi cho nguoi dung moi
@@ -1058,7 +1061,7 @@ private:
 
         try
         {
-            User newUser = dataManager.createUser(username, password, fullName, email, phone, isAdmin);
+            User newUser = dataManager.createUser(username, password, fullName, email, phone, isAdmin, autoGen);
             std::cout << "Tao tai khoan thanh cong.\n";
             std::cout << "ID nguoi dung: " << newUser.getUserId() << std::endl;
         }
@@ -1130,7 +1133,7 @@ public:
         {
             try
             {
-                dataManager.createUser("admin", "admin123", "Administrator", "admin@example.com", "0123456789", true);
+                dataManager.createUser("admin", "admin123", "Administrator", "admin@example.com", "0123456789", true, false);
                 std::cout << "Da tao tai khoan quan tri mac dinh.\n";
                 std::cout << "Ten dang nhap: admin\n";
                 std::cout << "Mat khau: admin123\n";
@@ -1210,6 +1213,11 @@ public:
         else
         {
             std::cout << "Dang nhap that bai. Ten dang nhap hoac mat khau khong dung.\n";
+        }
+        if(currentUser && currentUser->getIsGenPassword())
+        {
+            std::cout << "Mat khau da duoc tao tu dong. Vui long doi mat khau.\n";
+            changePassword();
         }
     }
 
