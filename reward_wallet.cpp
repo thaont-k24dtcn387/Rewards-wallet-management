@@ -10,6 +10,8 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <curl/curl.h>
+
 
 // Lop User: Quan ly thong tin nguoi dung
 class User
