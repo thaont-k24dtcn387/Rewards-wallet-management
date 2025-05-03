@@ -571,13 +571,13 @@ public:
             return false; // Khong tim thay giao dich hoac giao dich khong o trang thai pending
         }
 
-        // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
-        if (otp != "123456")
-        { // OTP mau
-            transactionIt->setStatus("failed");
-            saveData();
-            return false;
-        }
+        // // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
+        // if (otp != "123456")
+        // { // OTP mau
+        //     transactionIt->setStatus("failed");
+        //     saveData();
+        //     return false;
+        // }
 
         // Tim vi nguon
         auto fromWalletIt = std::find_if(wallets.begin(), wallets.end(),
@@ -976,7 +976,7 @@ private:
         std::string otp;
         if (emailSender.sendOTP(recipientEmail, otp))
         {
-            std::cout << "Da gui ma OTP " << otp << " thanh cong den " << recipientEmail << std::endl;
+            std::cout << "Da gui ma OTP thanh cong den " << recipientEmail << std::endl;
         }
         else
         {
@@ -985,9 +985,16 @@ private:
 
         // Dọn dẹp thư viện curl
         curl_global_cleanup();
-
+        std::string recipientOTP;
+        std::cout << "Nhap OTPA nhan: ";
+        std::cin >> recipientOTP;
+        if(recipientOTP != otp)
+        {
+            std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
+            return;
+        }
         // Thuc hien giao dich
-        bool success = dataManager.executeTransaction(transaction.getTransactionId(), "123456");
+        bool success = dataManager.executeTransaction(transaction.getTransactionId(), otp);
 
         if (success)
         {
