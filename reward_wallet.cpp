@@ -951,13 +951,14 @@ private:
         Transaction transaction = dataManager.createTransaction(fromWallet->getWalletId(), toWalletId, amount, description);
 
         CURLcode curlInitResult = curl_global_init(CURL_GLOBAL_DEFAULT);
-        if (curlInitResult != CURLE_OK) {
+        if (curlInitResult != CURLE_OK)
+        {
             std::cerr << "Khong the khoi tao thu vien curl: " << curl_easy_strerror(curlInitResult) << std::endl;
             std::cout << "Nhan Enter de thoat...";
             std::cin.get();
             return;
         }
-        
+
         // Tạo đối tượng email sender
         OTPEmailSender emailSender(
             "smtp.gmail.com:587",
@@ -988,7 +989,7 @@ private:
         std::string recipientOTP;
         std::cout << "Nhap OTPA nhan: ";
         std::cin >> recipientOTP;
-        if(recipientOTP != otp)
+        if (recipientOTP != otp)
         {
             std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
             return;
