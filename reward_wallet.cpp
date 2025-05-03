@@ -1076,36 +1076,35 @@ private:
         // Tao giao dich
         Transaction transaction = dataManager.createTransaction(fromWallet->getWalletId(), toWalletId, amount, description);
 
-        // Sinh OTP
-        // curl_global_init(CURL_GLOBAL_DEFAULT);
+        
 
-        // // Tạo đối tượng email sender
-        // OTPEmailSender emailSender(
-        //     "smtp.gmail.com:587",
-        //     "hieunm.hrt@gmail.com", // Thay bằng email của bạn
-        //     "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
-        //     6,                      // Độ dài OTP
-        //     300                     // Thời gian hết hạn (giây)
-        // );
+        // Tạo đối tượng email sender
+        OTPEmailSender emailSender(
+            "smtp.gmail.com:587",
+            "hieunm.hrt@gmail.com", // Thay bằng email của bạn
+            "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
+            6,                      // Độ dài OTP
+            300                     // Thời gian hết hạn (giây)
+        );
 
-        // // Email người nhận
-        // std::string recipientEmail;
-        // std::cout << "Nhập email người nhận: ";
-        // std::cin >> recipientEmail;
+        // Email người nhận
+        std::string recipientEmail;
+        std::cout << "Nhập email người nhận: ";
+        std::cin >> recipientEmail;
 
-        // // Gửi OTP
-        // std::string otp;
-        // if (emailSender.sendOTP(recipientEmail, otp))
-        // {
-        //     std::cout << "Đã gửi mã OTP " << otp << " thành công đến " << recipientEmail << std::endl;
-        // }
-        // else
-        // {
-        //     std::cout << "Không thể gửi mã OTP!" << std::endl;
-        // }
+        // Gửi OTP
+        std::string otp;
+        if (emailSender.sendOTP(recipientEmail, otp))
+        {
+            std::cout << "Đã gửi mã OTP " << otp << " thành công đến " << recipientEmail << std::endl;
+        }
+        else
+        {
+            std::cout << "Không thể gửi mã OTP!" << std::endl;
+        }
 
-        // // Dọn dẹp thư viện curl
-        // curl_global_cleanup();
+        // Dọn dẹp thư viện curl
+        curl_global_cleanup();
 
         // Thuc hien giao dich
         bool success = dataManager.executeTransaction(transaction.getTransactionId(), "123456");
