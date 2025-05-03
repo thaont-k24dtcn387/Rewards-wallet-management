@@ -11,7 +11,7 @@
 #include <sstream>
 #include <algorithm>
 #include <curl/curl.h>
-
+#include "OTPEmailSender.h"
 
 // Lop User: Quan ly thong tin nguoi dung
 class User
@@ -24,7 +24,7 @@ private:
     std::string email;
     std::string phone;
     bool isAdmin;
-    bool isGenPassword; 
+    bool isGenPassword;
 
 public:
     User() : isAdmin(false) {}
@@ -58,7 +58,7 @@ public:
     std::string toString() const
     {
         return userId + "," + username + "," + passwordHash + "," +
-               fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0")+ "," + (isGenPassword ? "1" : "0");
+               fullName + "," + email + "," + phone + "," + (isAdmin ? "1" : "0") + "," + (isGenPassword ? "1" : "0");
     }
 
     // Tao doi tuong User tu chuoi
@@ -571,13 +571,13 @@ public:
             return false; // Khong tim thay giao dich hoac giao dich khong o trang thai pending
         }
 
-        // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
-        if (otp != "123456")
-        { // OTP mau
-            transactionIt->setStatus("failed");
-            saveData();
-            return false;
-        }
+        // // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
+        // if (otp != "123456")
+        // { // OTP mau
+        //     transactionIt->setStatus("failed");
+        //     saveData();
+        //     return false;
+        // }
 
         // Tim vi nguon
         auto fromWalletIt = std::find_if(wallets.begin(), wallets.end(),
@@ -950,17 +950,51 @@ private:
         // Tao giao dich
         Transaction transaction = dataManager.createTransaction(fromWallet->getWalletId(), toWalletId, amount, description);
 
-        // Sinh OTP
-        std::string otp = dataManager.generateOTP();
-        std::cout << "Ma OTP cua ban la: " << otp << std::endl;
+        CURLcode curlInitResult = curl_global_init(CURL_GLOBAL_DEFAULT);
+        if (curlInitResult != CURLE_OK) {
+            std::cerr << "Khong the khoi tao thu vien curl: " << curl_easy_strerror(curlInitResult) << std::endl;
+            std::cout << "Nhan Enter de thoat...";
+            std::cin.get();
+            return;
+        }
+        
+        // Tạo đối tượng email sender
+        OTPEmailSender emailSender(
+            "smtp.gmail.com:587",
+            "hieunm.hrt@gmail.com", // Thay bằng email của bạn
+            "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
+            6,                      // Độ dài OTP
+            300                     // Thời gian hết hạn (giây)
+        );
 
-        // Xac nhan OTP
-        std::string inputOTP;
-        std::cout << "Nhap ma OTP de xac nhan giao dich: ";
-        std::cin >> inputOTP;
+        // Email người nhận
+        std::string recipientEmail;
+        std::cout << "Nhap email nguoi nhan: ";
+        std::cin >> recipientEmail;
 
+        // Gửi OTP
+        std::string otp;
+        if (emailSender.sendOTP(recipientEmail, otp))
+        {
+            std::cout << "Da gui ma OTP thanh cong den " << recipientEmail << std::endl;
+        }
+        else
+        {
+            std::cout << "Khong the gui ma OTP!" << std::endl;
+        }
+
+        // Dọn dẹp thư viện curl
+        curl_global_cleanup();
+        std::string recipientOTP;
+        std::cout << "Nhap OTPA nhan: ";
+        std::cin >> recipientOTP;
+        if(recipientOTP != otp)
+        {
+            std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
+            return;
+        }
         // Thuc hien giao dich
-        bool success = dataManager.executeTransaction(transaction.getTransactionId(), inputOTP);
+        bool success = dataManager.executeTransaction(transaction.getTransactionId(), otp);
 
         if (success)
         {
@@ -1221,12 +1255,12 @@ public:
         }
         std::cout << currentUser->getUsername() << std::endl;
         std::cout << currentUser->getIsAdmin() << std::endl;
-        if(currentUser && currentUser->getIsGenPassword())
+        if (currentUser && currentUser->getIsGenPassword())
         {
             std::cout << "Mat khau da duoc tao tu dong. Vui long doi mat khau.\n";
             changePassword();
-            currentUser->setIsGenPassword(false); 
-            dataManager.saveData(); 
+            currentUser->setIsGenPassword(false);
+            dataManager.saveData();
         }
     }
 
