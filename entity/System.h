@@ -76,7 +76,8 @@ private:
             std::cout << "2. Xem danh sach nguoi dung\n";
             std::cout << "3. Sao luu du lieu\n";
             std::cout << "4. Khoi phuc du lieu\n";
-            std::cout << "5. Dang xuat\n";
+            std::cout << "5. Chuyen tien den vi\n";
+            std::cout << "6. Dang xuat\n";
             std::cout << "Lua chon cua ban: ";
 
             int choice;
@@ -97,6 +98,9 @@ private:
                 restoreData();
                 break;
             case 5:
+                transfermoney();
+                break;
+            case 6:
                 logout();
                 return;
             default:
@@ -155,22 +159,22 @@ private:
             return;
         }
 
-        std::cout << std::left << std::setw(12) << "ID GD"
-                  << std::setw(12) << "TU VI"
-                  << std::setw(12) << "DEN VI"
+        std::cout << std::left << std::setw(25) << "ID GD"
+                  << std::setw(25) << "TU VI"
+                  << std::setw(25) << "DEN VI"
                   << std::setw(10) << "SO DIEM"
-                  << std::setw(20) << "THOI GIAN"
-                  << std::setw(10) << "TRANG THAI"
+                  << std::setw(25) << "THOI GIAN"
+                  << std::setw(12) << "TRANG THAI "
                   << "MO TA\n";
 
         for (const auto &transaction : transactions)
         {
-            std::cout << std::left << std::setw(12) << transaction.getTransactionId()
-                      << std::setw(12) << transaction.getFromWalletId()
-                      << std::setw(12) << transaction.getToWalletId()
+            std::cout << std::left << std::setw(25) << transaction.getTransactionId() + " "
+                      << std::setw(25) << transaction.getFromWalletId() + " "
+                      << std::setw(25) << transaction.getToWalletId() + " "
                       << std::setw(10) << transaction.getAmount()
-                      << std::setw(20) << transaction.getTimestamp()
-                      << std::setw(10) << transaction.getStatus()
+                      << std::setw(25) << transaction.getTimestamp()
+                      << std::setw(12) << transaction.getStatus()
                       << transaction.getDescription() << std::endl;
         }
     }
@@ -425,7 +429,16 @@ private:
         dataManager.backupData();
         std::cout << "Da sao luu du lieu thanh cong.\n";
     }
-
+    void transfermoney()
+    {
+        std::cout << "Nhap ID vi nhan: ";
+        std::string receiveWalletId;
+        std::cin >> receiveWalletId;
+        std::cout << "Nhap so diem can chuyen: ";
+        double amount;
+        std::cin >> amount;
+        dataManager.moneyTransactionToWallet(receiveWalletId, amount);
+    }
     // Khoi phuc du lieu
     void restoreData()
     {

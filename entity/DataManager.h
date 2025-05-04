@@ -317,15 +317,6 @@ public:
         {
             return false; // Khong tim thay giao dich hoac giao dich khong o trang thai pending
         }
-
-        // // Xac thuc OTP (day la vi du don gian, trong thuc te can mot he thong OTP an toan hon)
-        // if (otp != "123456")
-        // { // OTP mau
-        //     transactionIt->setStatus("failed");
-        //     saveData();
-        //     return false;
-        // }
-
         // Tim vi nguon
         auto fromWalletIt = std::find_if(wallets.begin(), wallets.end(),
                                          [&](const Wallet &w)
@@ -368,6 +359,20 @@ public:
             transactionIt->setStatus("failed");
             saveData();
             return false;
+        }
+    }
+
+    void moneyTransactionToWallet(const std::string &walletId, double amount)
+    {
+        auto walletIt = std::find_if(wallets.begin(), wallets.end(),
+                                      [&walletId](const Wallet &w)
+                                      { return w.getWalletId() == walletId; });
+
+        if (walletIt != wallets.end())
+        {
+            walletIt->addPoints(amount);
+            saveData();
+            std::cout << "Da chuyen " << amount << " diem vao vi " << walletId << std::endl;
         }
     }
 
