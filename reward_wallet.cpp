@@ -732,7 +732,6 @@ public:
     }
 };
 
-// Lop quan ly he thong
 class System
 {
 private:
