@@ -324,7 +324,51 @@ private:
             std::cout << "Mat khau xac nhan khong khop.\n";
             return;
         }
+        // gui OTP den email
+        CURLcode curlInitResult = curl_global_init(CURL_GLOBAL_DEFAULT);
+        if (curlInitResult != CURLE_OK)
+        {
+            std::cerr << "Khong the khoi tao thu vien curl: " << curl_easy_strerror(curlInitResult) << std::endl;
+            std::cout << "Nhan Enter de thoat...";
+            std::cin.get();
+            return;
+        }
 
+        // Tạo đối tượng email sender
+        OTPEmailSender emailSender(
+            "smtp.gmail.com:587",
+            "hieunm.hrt@gmail.com", // Thay bằng email của bạn
+            "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
+            6,                      // Độ dài OTP
+            300                     // Thời gian hết hạn (giây)
+        );
+
+        // Email người nhận
+        std::string recipientEmail;
+        std::cout << "Nhap email nguoi nhan OTP de thay doi mat khau: ";
+        std::cin >> recipientEmail;
+
+        // Gửi OTP
+        std::string otp;
+        if (emailSender.sendOTP(recipientEmail, otp))
+        {
+            std::cout << "Da gui ma OTP thanh cong den " << recipientEmail << std::endl;
+        }
+        else
+        {
+            std::cout << "Khong the gui ma OTP!" << std::endl;
+        }
+
+        // Dọn dẹp thư viện curl
+        curl_global_cleanup();
+        std::string recipientOTP;
+        std::cout << "Nhap ma OTP nhan: ";
+        std::cin >> recipientOTP;
+        if (recipientOTP != otp)
+        {
+            std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
+            return;
+        }
         // Cap nhat mat khau
         currentUser->setPasswordHash(dataManager.hashPassword(newPassword));
         dataManager.saveData();
