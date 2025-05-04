@@ -25,7 +25,6 @@ class System
 private:
     DataManager dataManager;
     User *currentUser;
-
     // Hien thi menu cho nguoi dung
     void showUserMenu()
     {
@@ -272,7 +271,7 @@ private:
         // Dọn dẹp thư viện curl
         curl_global_cleanup();
         std::string recipientOTP;
-        std::cout << "Nhap OTPA nhan: ";
+        std::cout << "Nhap ma OTP nhan: ";
         std::cin >> recipientOTP;
         if (recipientOTP != otp)
         {
