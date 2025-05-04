@@ -751,10 +751,8 @@ private:
             std::cout << "5. Doi mat khau\n";
             std::cout << "6. Dang xuat\n";
             std::cout << "Lua chon cua ban: ";
-
             int choice;
             std::cin >> choice;
-
             switch (choice)
             {
             case 1:
