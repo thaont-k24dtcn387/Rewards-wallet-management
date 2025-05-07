@@ -449,16 +449,16 @@ private:
         std::vector<User> &users = dataManager.users;
 
         std::cout << "\n===== DANH SACH NGUOI DUNG =====\n";
-        std::cout << std::left << std::setw(12) << "ID"
+        std::cout << std::left << std::setw(20) << "ID"
                   << std::setw(20) << "TEN DANG NHAP"
                   << std::setw(30) << "HO TEN"
                   << std::setw(30) << "EMAIL"
                   << std::setw(15) << "SO DIEN THOAI"
-                  << "LOAI\n";
+                  << "VAI TRO\n";
 
         for (const auto &user : users)
         {
-            std::cout << std::left << std::setw(12) << user.getUserId()
+            std::cout << std::left << std::setw(20) << user.getUserId() + " "
                       << std::setw(20) << user.getUsername()
                       << std::setw(30) << user.getFullName()
                       << std::setw(30) << user.getEmail()
