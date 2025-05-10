@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <ctime>
+#include <cstring>
 #include <random>
 #include <curl/curl.h>
 
