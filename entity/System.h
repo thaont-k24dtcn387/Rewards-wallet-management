@@ -565,7 +565,7 @@ public:
                     std::cout << "Cam on ban da su dung he thong. Tam biet!\n";
                     return;
                 default:
-                    std::cout << "Lua chon khong hop le.\n";
+                    std::cout << "Lua chon cua ban khong hop le.\n";
                 }
             }
         }
