@@ -3,6 +3,27 @@
 - Nguyễn Quang Trung
 - Lê Hoàng Nam
 
+# Giới thiệu dự án
+- Dự án quản lý ví điểm thưởng giúp cho người dùng có thể dễ dàng chuyển điểm từ ví mình sang ví của người dùng khác một cách dễ dàng.  
+- Ngoài ra hệ thống còn sử dụng xác thực OTP mỗi khi chuyển tiền cũng như thay đổi thông tin người dùng nên đem lại sự bảo mật cho người dùng.
+
+# Bản phân tích, đặc tả chức năng đầy đủ:
+- Chức năng đăng ký, đăng nhập: Lưu dữ liệu vào file users.dat
+- Chức năng chuyển điểm từ ví admin sang ví người dùng
+- Chức năng chuyển điểm từ ví người dùng 1 sang người dùng 2
+- Chức năng 
+
+# Cách tải và chạy chương trình trên máy tính cá nhân:
+- Cài đặt môi trường phát triển C++: VSCode + MinGW
+- Cài đặt thư viện libcurl vì dự án có sử dụng
+  - Truy cập trang chủ curl: https://curl.se/windows/
+  - Tải bản "curl-x.x.x-win64-mingw.zip"
+  - Giải nén và thêm vào PATH
+- Tải mã nguồn dự án: git clone [địa chỉ repository]
+- cd [tên thư mục dự án]
+- Đối với MinGW ta sẽ sử dụng câu lệnh biên dịch: g++ -o reward_wallet reward_wallet.cpp entity/*.cpp -I. -lcurl
+- Để chạy chương trình ta sử dụng câu lệnh: reward_wallet.exe
+
 # Hệ thống quản lý ví điểm thưởng
 ## Trả lời các câu hỏi về chức năng chính của hệ thống:
 ### Hãy phân tích và đề xuất một cấu trúc dữ liệu (lớp) quản lý thông tin tài khoản người dùng.
