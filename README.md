@@ -9,9 +9,12 @@
 
 # Bản phân tích, đặc tả chức năng đầy đủ:
 - Chức năng đăng ký, đăng nhập: Lưu dữ liệu vào file users.dat
-- Chức năng chuyển điểm từ ví admin sang ví người dùng
-- Chức năng chuyển điểm từ ví người dùng 1 sang người dùng 2
-- Chức năng 
+- Chức năng xem danh sách người dùng và tạo mới tài khoản của admin: Khi tạo tài khoản mới, mật khẩu sẽ được cấp tự động thông qua hàm băm. 
+- Chức năng chuyển điểm từ ví admin sang ví người dùng: Số điểm của ví admin là không giới hạn, có thể thêm bao nhiêu điểm vào người dùng cũng được và điểm của người dùng được thể hiện trong file users.dat
+- Chức năng chuyển điểm từ ví người dùng 1 sang người dùng 2: Kiểm tra xem ví của người dùng 1 có đủ số điểm cần chuyển không, nếu có thì chuyển sang cho ví 2 nhưng sẽ cần phải nhập đúng OTP trước khi giao dịch thành công. OTP sẽ được gửi qua gmail
+- Chức năng thay đổi mật khẩu: Sau khi đổi, mã OTP sẽ được gửi về gmail của người dùng. Nếu nhập đúng thì mật khẩu sẽ được thay đổi trong file users.dat
+- Chức năng xem và chỉnh sửa thông tin cá nhân: 
+- Chức năng theo dõi biến động số dư và giao dịch:
 
 # Cách tải và chạy chương trình trên máy tính cá nhân:
 - Cài đặt môi trường phát triển C++: VSCode + MinGW
