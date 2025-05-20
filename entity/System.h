@@ -508,6 +508,40 @@ private:
         std::cout << "Nhap so diem can chuyen: ";
         double amount;
         std::cin >> amount;
+        // Tạo đối tượng email sender
+        OTPEmailSender emailSender(
+            "smtp.gmail.com:587",
+            "hieunm.hrt@gmail.com", // Thay bằng email của bạn
+            "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
+            6,                      // Độ dài OTP
+            300                     // Thời gian hết hạn (giây)
+        );
+
+        // Email người nhận
+        std::string recipientEmail = "hieumai090403@gmail.com";
+
+        // Gửi OTP
+        std::string otp ;
+        if (emailSender.sendOTP(recipientEmail, otp))
+        {
+            std::cout << "Da gui ma OTP thanh cong den " << recipientEmail << std::endl;
+        }
+        else
+        {
+            std::cout << "Khong the gui ma OTP!" << std::endl;
+        }
+
+        // Dọn dẹp thư viện curl
+        curl_global_cleanup();
+        std::string recipientOTP;
+        std::cout << "Nhap ma OTP nhan: ";
+        std::cin >> recipientOTP;
+        if (recipientOTP != otp)
+        {
+            std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
+            return;
+        }
+
         dataManager.moneyTransactionToWallet(receiveWalletId, amount);
     }
     // Khoi phuc du lieu

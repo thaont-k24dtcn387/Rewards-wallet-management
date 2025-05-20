@@ -57,6 +57,7 @@
         "cstdarg": "cpp",
         "chrono": "cpp",
         "ratio": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "cstring": "cpp"
     }
 }
