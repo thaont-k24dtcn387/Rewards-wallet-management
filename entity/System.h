@@ -36,7 +36,8 @@ private:
             std::cout << "3. Xem lich su giao dich\n";
             std::cout << "4. Chuyen diem\n";
             std::cout << "5. Doi mat khau\n";
-            std::cout << "6. Dang xuat\n";
+            std::cout << "6. Thay doi thong tin ca nhan\n";
+            std::cout << "7. Dang xuat\n";
             std::cout << "Lua chon cua ban: ";
             int choice;
             std::cin >> choice;
@@ -58,6 +59,9 @@ private:
                 changePassword();
                 break;
             case 6:
+                 changeAccountInfo();   
+                break;
+            case 7:
                 logout();
                 return;
             default:
@@ -294,7 +298,30 @@ private:
             std::cout << "Chuyen diem that bai. Vui long kiem tra lai OTP hoac thu lai sau.\n";
         }
     }
+    // mai check lai phan nay xem co dung khong?
+    void changeAccountInfo()
+    {
+        std::cin.ignore(); // Xoa bo dem
+        std::string fullName, email, phone;
 
+        std::cout << "\n===== THAY DOI THONG TIN CA NHAN =====\n";
+        std::cout << "Nhap ho ten moi: ";
+        std::getline(std::cin, fullName);
+
+        std::cout << "Nhap email moi: ";
+        std::getline(std::cin, email);
+
+        std::cout << "Nhap so dien thoai moi: ";
+        std::getline(std::cin, phone);
+
+        currentUser->setFullName(fullName);
+        currentUser->setEmail(email);
+        currentUser->setPhone(phone);
+
+        dataManager.saveData();
+
+        std::cout << "Thay doi thong tin ca nhan thanh cong.\n";
+    }
     // Doi mat khau
     void changePassword()
     {
@@ -481,6 +508,40 @@ private:
         std::cout << "Nhap so diem can chuyen: ";
         double amount;
         std::cin >> amount;
+        // Tạo đối tượng email sender
+        OTPEmailSender emailSender(
+            "smtp.gmail.com:587",
+            "hieunm.hrt@gmail.com", // Thay bằng email của bạn
+            "fsyl ymhq iswj hhwe",  // Thay bằng mật khẩu ứng dụng (không phải mật khẩu Gmail)
+            6,                      // Độ dài OTP
+            300                     // Thời gian hết hạn (giây)
+        );
+
+        // Email người nhận
+        std::string recipientEmail = "hieumai090403@gmail.com";
+
+        // Gửi OTP
+        std::string otp ;
+        if (emailSender.sendOTP(recipientEmail, otp))
+        {
+            std::cout << "Da gui ma OTP thanh cong den " << recipientEmail << std::endl;
+        }
+        else
+        {
+            std::cout << "Khong the gui ma OTP!" << std::endl;
+        }
+
+        // Dọn dẹp thư viện curl
+        curl_global_cleanup();
+        std::string recipientOTP;
+        std::cout << "Nhap ma OTP nhan: ";
+        std::cin >> recipientOTP;
+        if (recipientOTP != otp)
+        {
+            std::cout << "Ma OTP khong dung. Vui long thu lai.\n";
+            return;
+        }
+
         dataManager.moneyTransactionToWallet(receiveWalletId, amount);
     }
     // Khoi phuc du lieu
