@@ -13,8 +13,8 @@
 - Chức năng chuyển điểm từ ví admin sang ví người dùng: Số điểm của ví admin là không giới hạn, có thể thêm bao nhiêu điểm vào người dùng cũng được và điểm của người dùng được thể hiện trong file users.dat
 - Chức năng chuyển điểm từ ví người dùng 1 sang người dùng 2: Kiểm tra xem ví của người dùng 1 có đủ số điểm cần chuyển không, nếu có thì chuyển sang cho ví 2 nhưng sẽ cần phải nhập đúng OTP trước khi giao dịch thành công. OTP sẽ được gửi qua gmail
 - Chức năng thay đổi mật khẩu: Sau khi đổi, mã OTP sẽ được gửi về gmail của người dùng. Nếu nhập đúng thì mật khẩu sẽ được thay đổi trong file users.dat
-- Chức năng xem và chỉnh sửa thông tin cá nhân: 
-- Chức năng theo dõi biến động số dư và giao dịch:
+- Chức năng xem và chỉnh sửa thông tin cá nhân: Các thông tin cá nhân như: Tên đăng nhập, họ và tên, email, số điện thoại có thể được thay đổi đối với mỗi người dùng, các thay đổi được lưu trong file users.dat
+- Chức năng theo dõi biến động số dư và giao dịch: Mỗi khi giao dịch, thông tin sẽ được ghi vào file transactions.dat , các thông tin bao gồm, id giao dịch, id ví gửi, id ví nhận, số điểm, thời gian, trạng thái và mô tả.
 
 # Cách tải và chạy chương trình trên máy tính cá nhân:
 - Cài đặt môi trường phát triển C++: VSCode + MinGW
