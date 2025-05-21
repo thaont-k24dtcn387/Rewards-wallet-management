@@ -1,6 +1,6 @@
 # Các thành viên của dự án
 - Nguyễn Thu Thảo (MSV: K24DTCN387)
-- Nguyễn Quang Trung (MSV: K24DTCN393) - Nhóm trưởng
+- Nguyễn Quốc Trung (MSV: K24DTCN393) - Nhóm trưởng
 - Lê Hoàng Nam (MSV: K24DTCN376)
 
 # Giới thiệu dự án
