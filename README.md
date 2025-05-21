@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/ed8b305e-0482-41ec-96bc-5c904019a30f)# Các thành viên của dự án
+# Các thành viên của dự án
 - Nguyễn Thu Thảo (MSV: K24DTCN387)
 - Nguyễn Quang Trung (MSV: K24DTCN393)
 - Lê Hoàng Nam (MSV: K24DTCN376)
