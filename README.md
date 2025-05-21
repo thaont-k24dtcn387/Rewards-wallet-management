@@ -1,7 +1,7 @@
-# Các thành viên của dự án
-- Nguyễn Thu Thảo
-- Nguyễn Quang Trung
-- Lê Hoàng Nam
+![image](https://github.com/user-attachments/assets/ed8b305e-0482-41ec-96bc-5c904019a30f)# Các thành viên của dự án
+- Nguyễn Thu Thảo (MSV: K24DTCN387)
+- Nguyễn Quang Trung (MSV: K24DTCN393)
+- Lê Hoàng Nam (MSV: K24DTCN376)
 
 # Giới thiệu dự án
 - Dự án quản lý ví điểm thưởng giúp cho người dùng có thể dễ dàng chuyển điểm từ ví mình sang ví của người dùng khác một cách dễ dàng.  
