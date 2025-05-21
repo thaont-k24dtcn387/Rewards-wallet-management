@@ -5,7 +5,6 @@
 #include <string>
 #include <ctime>
 #include <random>
-// Lop Transaction: Quan ly giao dich
 class Transaction
 {
 private:
@@ -25,7 +24,6 @@ public:
         : transactionId(tid), fromWalletId(from), toWalletId(to),
           amount(amt), timestamp(time), status(stat), description(desc) {}
 
-    // Getters
     std::string getTransactionId() const { return transactionId; }
     std::string getFromWalletId() const { return fromWalletId; }
     std::string getToWalletId() const { return toWalletId; }
@@ -34,7 +32,6 @@ public:
     std::string getStatus() const { return status; }
     std::string getDescription() const { return description; }
 
-    // Setters
     void setTransactionId(const std::string &id) { transactionId = id; }
     void setFromWalletId(const std::string &id) { fromWalletId = id; }
     void setToWalletId(const std::string &id) { toWalletId = id; }

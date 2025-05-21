@@ -6,13 +6,12 @@
 #include <ctime>
 #include <random>
 
-// Lop User: Quan ly thong tin nguoi dung
 class User
 {
 private:
     std::string userId;
     std::string username;
-    std::string passwordHash; // Mat khau da duoc ma hoa
+    std::string passwordHash; 
     std::string fullName;
     std::string email;
     std::string phone;
@@ -27,7 +26,6 @@ public:
         : userId(id), username(username), passwordHash(passwordHash),
           fullName(fullName), email(email), phone(phone), isAdmin(isAdmin), isGenPassword(isGenPassword) {}
 
-    // Getters
     std::string getUserId() const { return userId; }
     std::string getUsername() const { return username; }
     std::string getPasswordHash() const { return passwordHash; }
@@ -37,7 +35,6 @@ public:
     bool getIsAdmin() const { return isAdmin; }
     bool getIsGenPassword() const { return isGenPassword; }
 
-    // Setters
     void setUserId(const std::string &id) { userId = id; }
     void setUsername(const std::string &uname) { username = uname; }
     void setPasswordHash(const std::string &pwd) { passwordHash = pwd; }

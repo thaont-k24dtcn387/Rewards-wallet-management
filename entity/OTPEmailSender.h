@@ -38,7 +38,6 @@ public:
         const char charset[] = "0123456789";
         std::string otp;
 
-        // Su dung random engine an toan hon
         std::random_device rd;
         std::mt19937 generator(rd());
         std::uniform_int_distribution<int> distribution(0, sizeof(charset) - 2);
@@ -67,13 +66,10 @@ public:
         return 0;
     }
 
-    // Ham gui OTP qua email
     bool sendOTP(const std::string &recipientEmail, std::string &otp)
     {
-        // Tao ma OTP
         otp = generateOTP();
 
-        // Tao noi dung email
         std::string emailBody = "Subject: Your OTP Code\r\n"
                                 "To: " +
                                 recipientEmail + "\r\n"
@@ -115,22 +111,17 @@ public:
         curl_easy_setopt(curl, CURLOPT_READDATA, &readBuffer);
         curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
 
-        // Tuy chon bo sung cho debug
         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
 
-        // Them cac tuy chon bao mat cho Gmail
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
 
-        // Them timeout de tranh treo chuong trinh
         curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
 
         std::cout << "Dang gui email den " << recipientEmail << "..." << std::endl;
 
-        // Thuc hien gui email
         res = curl_easy_perform(curl);
 
-        // Kiem tra ket qua
         bool success = (res == CURLE_OK);
         if (!success)
         {

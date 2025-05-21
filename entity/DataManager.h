@@ -18,13 +18,12 @@
 #include "Transaction.h"
 #include "User.h"
 
-// Lop quan ly du lieu
 class DataManager
 {
 private:
-    std::string usersFile = "users.dat";
-    std::string walletsFile = "wallets.dat";
-    std::string transactionsFile = "transactions.dat";
+    std::string usersFile = "database/users.dat";
+    std::string walletsFile = "database/wallets.dat";
+    std::string transactionsFile = "database/transactions.dat";
     std::string backupDir = "backup/";
 
     std::vector<Wallet> wallets;
@@ -160,7 +159,6 @@ public:
         }
     }
 
-    // Luu du lieu vi vao file
     void saveWallets()
     {
         std::ofstream file(walletsFile);
@@ -174,7 +172,6 @@ public:
         }
     }
 
-    // Luu du lieu giao dich vao file
     void saveTransactions()
     {
         std::ofstream file(transactionsFile);
@@ -188,7 +185,6 @@ public:
         }
     }
 
-    // Sao luu du lieu
     void backupData()
     {
         std::string timestamp = getCurrentTimestamp();
@@ -216,7 +212,6 @@ public:
         dstTransactions << srcTransactions.rdbuf();
     }
 
-    // Khoi phuc du lieu tu ban sao luu
     bool restoreData(const std::string &timestamp)
     {
         std::string backupUserFile = backupDir + "users_" + timestamp + ".bak";
@@ -246,18 +241,15 @@ public:
         std::ofstream dstTransactions(transactionsFile, std::ios::binary);
         dstTransactions << srcTransactions.rdbuf();
 
-        // Tai lai du lieu tu file
         loadData();
 
         return true;
     }
 
-    // Tao va them nguoi dung moi
     User createUser(const std::string &username, const std::string &password,
                     const std::string &fullName, const std::string &email,
                     const std::string &phone, bool isAdmin = false, bool isGenPassword = false)
     {
-        // Kiem tra xem username da ton tai chua
         for (const auto &user : users)
         {
             if (user.getUsername() == username)
@@ -272,14 +264,12 @@ public:
         User newUser(userId, username, passwordHash, fullName, email, phone, isAdmin, isGenPassword);
         users.push_back(newUser);
 
-        // Tao vi cho nguoi dung moi
         createWallet(userId);
 
         saveData();
         return newUser;
     }
 
-    // Tao va them vi moi
     Wallet createWallet(const std::string &userId)
     {
         std::string walletId = "W" + generateUniqueId();
@@ -290,7 +280,6 @@ public:
         return newWallet;
     }
 
-    // Tao va them giao dich moi
     Transaction createTransaction(const std::string &fromWalletId, const std::string &toWalletId,
                                   double amount, const std::string &description)
     {
@@ -305,10 +294,8 @@ public:
         return newTransaction;
     }
 
-    // Thuc hien giao dich chuyen diem
     bool executeTransaction(const std::string &transactionId, const std::string &otp)
     {
-        // Tim giao dich theo ID
         auto transactionIt = std::find_if(transactions.begin(), transactions.end(),
                                           [&transactionId](const Transaction &t)
                                           { return t.getTransactionId() == transactionId; });
@@ -379,8 +366,6 @@ public:
     // Tao OTP (gia lap)
     std::string generateOTP()
     {
-        // Trong thuc te, OTP se duoc gui qua SMS hoac email
-        // Day chi la vi du don gian
         return "123456"; // OTP mau
     }
 
@@ -400,7 +385,6 @@ public:
         return password;
     }
 
-    // Xac thuc dang nhap
     User *authenticate(const std::string &username, const std::string &password)
     {
         std::string passwordHash = hashPassword(password);
@@ -415,7 +399,6 @@ public:
         return nullptr;
     }
 
-    // Lay vi cua nguoi dung
     Wallet *getWalletByUserId(const std::string &userId)
     {
         for (auto &wallet : wallets)
@@ -428,7 +411,6 @@ public:
         return nullptr;
     }
 
-    // Lay vi theo ID
     Wallet *getWalletById(const std::string &walletId)
     {
         for (auto &wallet : wallets)
@@ -441,7 +423,6 @@ public:
         return nullptr;
     }
 
-    // Lay danh sach giao dich cua vi
     std::vector<Transaction> getTransactionsByWalletId(const std::string &walletId)
     {
         std::vector<Transaction> result;
@@ -457,7 +438,6 @@ public:
         return result;
     }
 
-    // Lay nguoi dung theo username
     User *getUserByUsername(const std::string &username)
     {
         for (auto &user : users)
@@ -470,7 +450,6 @@ public:
         return nullptr;
     }
 
-    // Lay nguoi dung theo ID
     User *getUserById(const std::string &userId)
     {
         for (auto &user : users)

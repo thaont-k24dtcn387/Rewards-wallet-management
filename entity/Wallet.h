@@ -6,7 +6,6 @@
 #include <vector>
 
 
-// Lop Wallet: Quan ly vi diem thuong
 class Wallet
 {
 private:
@@ -20,24 +19,20 @@ public:
     Wallet(const std::string &wid, const std::string &uid, double bal = 0.0)
         : walletId(wid), userId(uid), balance(bal) {}
 
-    // Getters
     std::string getWalletId() const { return walletId; }
     std::string getUserId() const { return userId; }
     double getBalance() const { return balance; }
 
-    // Setters
     void setWalletId(const std::string &id) { walletId = id; }
     void setUserId(const std::string &id) { userId = id; }
     void setBalance(double bal) { balance = bal; }
 
-    // Them diem vao vi
     bool addPoints(double points)
     {
         balance += points;
         return true;
     }
 
-    // Tru diem tu vi
     bool subtractPoints(double points)
     {
         if (balance >= points)
@@ -48,13 +43,11 @@ public:
         return false;
     }
 
-    // Chuyen doi thanh chuoi de luu vao file
     std::string toString() const
     {
         return walletId + "," + userId + "," + std::to_string(balance);
     }
 
-    // Tao doi tuong Wallet tu chuoi
     static Wallet fromString(const std::string &str)
     {
         Wallet wallet;
